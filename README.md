@@ -58,6 +58,16 @@ Change later in `~/.config/chezmoi/chezmoi.toml`:
 
 Then run `chezmoi apply`.
 
+## Migrating from zsh4humans
+
+If this machine still has the [legacy gist / zsh4humans](https://gist.github.com/bgeneto/7b8a806b930350ff6a3ebd952f569415) setup, the first `chezmoi apply` runs a one-shot migrator that:
+
+- copies/merges your existing history (`~/.zsh_history`) into `~/.local/state/zsh/history`
+- backs up old `~/.zshrc`, `~/.zshenv`, p10k configs, and the z4h cache under `~/zsh-migration-backup/`
+- optionally extracts intel/OpenBLAS/pyenv blocks into `~/.config/zsh/conf.d/90-migrated-local.zsh`
+
+Then restart the terminal (or `exec zsh`).
+
 ## Daily use
 
 ```bash
