@@ -24,7 +24,13 @@ direnv = "latest"
 {{- end }}
 
 {{- if eq .profile "workstation" }}
-# Optional language runtimes for workstation profiles:
-# node = "lts"
+# Language runtimes / CLIs for workstation profiles.
+# Prefer `mise use` in a project (writes mise.toml) or uncomment globals here:
+#
+#   mise use node@24 python@3.13
+#   mise use --global go@1.24 rust@stable java@temurin-21
+#
+# node = "24"
 # python = "3.13"
+# go = "1.24"
 {{- end }}
