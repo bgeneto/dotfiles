@@ -1,0 +1,29 @@
+# mise tools — managed by chezmoi (templated from elevated/profile).
+# After changing this file: chezmoi apply && mise install
+
+{{- $elevated := true -}}
+{{- if hasKey . "elevated" -}}
+{{- $elevated = .elevated -}}
+{{- end }}
+
+[settings]
+experimental = false
+
+[tools]
+{{- if not $elevated }}
+# Userspace shell CLIs (no apt/sudo). Short names use mise's registry backends.
+eza = "latest"
+starship = "latest"
+zoxide = "latest"
+bat = "latest"
+fd = "latest"
+ripgrep = "latest"
+fzf = "latest"
+jq = "latest"
+{{- end }}
+
+{{- if eq .profile "workstation" }}
+# Optional language runtimes for workstation profiles:
+# node = "lts"
+# python = "3.13"
+{{- end }}
