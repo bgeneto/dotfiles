@@ -1,6 +1,17 @@
 {{- $profiles := list "minimal" "server" "workstation" -}}
-{{- $profile := promptChoiceOnce . "profile" "Machine profile" $profiles "workstation" -}}
-{{- $elevated := promptBoolOnce . "elevated" "Install system packages with sudo/apt (and set login shell)?" true -}}
+{{- $profile := promptStringOnce . "profile" "Machine profile (minimal / server / workstation)" "workstation" -}}
+{{- if not (has $profile $profiles) -}}
+{{-   writeToStdout (printf "Invalid profile %q; expected one of: minimal, server, workstation\n" $profile) -}}
+{{-   exit 1 -}}
+{{- end -}}
+
+{{- $elevatedRaw := promptStringOnce . "elevated" "Install system packages with sudo/apt and set login shell? (true / false)" "true" -}}
+{{- $elevatedRaw = trim (lower $elevatedRaw) -}}
+{{- if and (ne $elevatedRaw "true") (ne $elevatedRaw "false") (ne $elevatedRaw "yes") (ne $elevatedRaw "no") (ne $elevatedRaw "y") (ne $elevatedRaw "n") -}}
+{{-   writeToStdout (printf "Invalid elevated value %q; expected true or false\n" $elevatedRaw) -}}
+{{-   exit 1 -}}
+{{- end -}}
+{{- $elevated := or (eq $elevatedRaw "true") (eq $elevatedRaw "yes") (eq $elevatedRaw "y") -}}
 
 [data]
     profile = {{ $profile | quote }}

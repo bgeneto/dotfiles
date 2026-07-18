@@ -4,4 +4,5 @@ LICENSE*
 .gitignore
 docs/**
 .git/**
+.local/**
 **/.DS_Store

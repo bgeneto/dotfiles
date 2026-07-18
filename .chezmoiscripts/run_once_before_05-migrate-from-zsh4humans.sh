@@ -84,11 +84,47 @@ if [[ -n "${HISTORY_SRC:-}" ]]; then
     elif cmp -s "$HISTORY_SRC" "$NEW_HISTFILE"; then
         printf 'New history already identical to source; left unchanged\n'
     else
-        # Merge without reading+writing the same file. Prefer source chronology
-        # first, then any newer entries already in the destination.
+        # Merge whole history entries (not raw lines). Line-level uniq breaks
+        # multi-line commands that use backslash continuations: shared
+        # continuation lines are dropped and leave a dangling timestamp header.
         cp -a "$NEW_HISTFILE" "$BACKUP_DIR/history.pre-merge"
         merge_tmp="$(mktemp)"
-        awk '!seen[$0]++' "$HISTORY_SRC" "$NEW_HISTFILE" >"$merge_tmp"
+        awk '
+            function flush(    key) {
+                if (entry == "")
+                    return
+                key = entry
+                sub(/^: [0-9]+:[0-9]+;/, "", key)
+                if (!(key in seen)) {
+                    seen[key] = 1
+                    printf "%s", entry
+                }
+                entry = ""
+                continuing = 0
+            }
+            {
+                line = $0
+                if (continuing) {
+                    entry = entry line "\n"
+                    continuing = (line ~ /\\$/)
+                    if (!continuing)
+                        flush()
+                    next
+                }
+                if (line ~ /^: [0-9]+:[0-9]+;/) {
+                    entry = line "\n"
+                    if (line ~ /\\$/)
+                        continuing = 1
+                    else
+                        flush()
+                    next
+                }
+                # Non-extended history: one line per entry.
+                entry = line "\n"
+                flush()
+            }
+            END { flush() }
+        ' "$HISTORY_SRC" "$NEW_HISTFILE" >"$merge_tmp"
         mv "$merge_tmp" "$NEW_HISTFILE"
         printf 'Merged history into: %s\n' "$NEW_HISTFILE"
     fi

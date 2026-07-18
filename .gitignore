@@ -18,6 +18,9 @@ Thumbs.db
 id_rsa
 id_ed25519
 
+# Accidentally installed user tools inside the repo (e.g. get.chezmoi.io/lb)
+.local/
+
 # Chezmoi local state (lives under ~/.config/chezmoi and ~/.local/share/chezmoi)
 # Keep the source repo clean if someone runs chezmoi from a worktree copy.
 .chezmoitemp/
