@@ -121,6 +121,11 @@ done
 # Navigation, prompt, and development tools
 # ---------------------------------------------------------------------------
 
+# Let Starship own the prompt. Without this, `source .venv/bin/activate`
+# (mise/direnv/uv) prepends "(venv_name)" before the directory.
+export VIRTUAL_ENV_DISABLE_PROMPT=1
+export CONDA_CHANGEPS1=no
+
 if (( $+commands[zoxide] )); then
   eval "$(zoxide init zsh)"
 fi

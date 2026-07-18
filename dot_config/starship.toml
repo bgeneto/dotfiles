@@ -35,3 +35,11 @@ format = "took [$duration]($style) "
 [status]
 disabled = false
 symbol = "✘"
+
+# Directory first; Python version + venv name at the end of the python segment.
+# Leading "(venv)" from `activate` is disabled in .zshrc via VIRTUAL_ENV_DISABLE_PROMPT.
+[python]
+format = 'via [${symbol}${version}( \($virtualenv\))]($style) '
+detect_extension = true
+detect_files = true
+detect_folders = true
