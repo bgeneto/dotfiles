@@ -5,17 +5,20 @@ set -euo pipefail
 exit 0
 {{- else }}
 
-# mise bootstrap checksum:
+# Triggers (change these so chezmoi re-runs this script):
 # mise-run-installer-v1
+# {{ include "dot_config/mise/config.toml" | sha256sum }}
+#
+# Do not skip the installer just because mise is already on PATH — that would
+# make bumping the trigger above silently ineffective.
 
-if ! command -v mise >/dev/null 2>&1 &&
-   [[ ! -x "$HOME/.local/bin/mise" ]]; then
-    curl -fsSL https://mise.run | sh
-fi
+curl -fsSL https://mise.run | sh
 
-mise_bin="$(command -v mise 2>/dev/null || true)"
-if [[ -z "$mise_bin" && -x "$HOME/.local/bin/mise" ]]; then
+mise_bin=""
+if [[ -x "$HOME/.local/bin/mise" ]]; then
     mise_bin="$HOME/.local/bin/mise"
+elif command -v mise >/dev/null 2>&1; then
+    mise_bin="$(command -v mise)"
 fi
 
 if [[ -z "$mise_bin" ]]; then
@@ -24,6 +27,6 @@ if [[ -z "$mise_bin" ]]; then
 fi
 
 if [[ -f "$HOME/.config/mise/config.toml" ]]; then
-    "$mise_bin" install || true
+    "$mise_bin" install
 fi
 {{- end }}

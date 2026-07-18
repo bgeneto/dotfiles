@@ -1,36 +1,29 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-{{- if ne .profile "workstation" }}
-exit 0
-{{- else }}
-
 if [[ "$(uname -s)" != "Linux" ]]; then
     exit 0
 fi
 
-font_dir="$HOME/.local/share/fonts/JetBrainsMonoNerdFont"
-marker="$font_dir/.chezmoi-installed"
+font_dir="$HOME/.local/share/fonts/FiraCodeNerdFont"
 
 # Font archive URL checksum trigger (bump when changing font source):
-# jetbrainsmono-nerd-font-latest
+# firacode-nerd-font-latest
+#
+# chezmoi run_onchange_ re-runs this script only when the rendered content
+# changes (including the trigger comment above). Do not add a local marker
+# file that skips work — that would block intentional re-downloads.
 
-if [[ -f "$marker" ]]; then
-    exit 0
-fi
-
+rm -rf "$font_dir"
 mkdir -p "$font_dir"
 
 curl -fsSL \
-    https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz |
+    https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraCode.tar.xz |
     tar -xJ -C "$font_dir"
 
 if command -v fc-cache >/dev/null 2>&1; then
     fc-cache -f
 fi
 
-date -u +%Y-%m-%dT%H:%M:%SZ >"$marker"
-
-printf 'Installed JetBrainsMono Nerd Font under %s\n' "$font_dir"
-printf 'Select "JetBrainsMono Nerd Font Mono" in your terminal emulator.\n'
-{{- end }}
+printf 'Installed FiraCode Nerd Font under %s\n' "$font_dir"
+printf 'Select "FiraCode Nerd Font Mono" in your terminal emulator.\n'

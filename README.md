@@ -29,9 +29,9 @@ Chosen once on first `chezmoi init` and stored in `~/.config/chezmoi/chezmoi.tom
 
 | Profile | Includes |
 |---|---|
-| `minimal` | Zsh, Git, fzf, Starship, eza, zoxide, bat, fd, ripgrep, Antidote |
+| `minimal` | Zsh, Git, fzf, Starship, eza, zoxide, bat, fd, ripgrep, Antidote, FiraCode Nerd Font |
 | `server` | minimal + tmux, htop, rsync, ncdu |
-| `workstation` | server + JetBrainsMono Nerd Font + mise |
+| `workstation` | server + mise |
 
 Change later by editing `profile` in `~/.config/chezmoi/chezmoi.toml`, then run `chezmoi apply`.
 
@@ -72,7 +72,7 @@ Host-specific settings (oneAPI, CUDA, proxies, etc.) go in unmanaged or managed 
 
 - Debian (13 recommended; package set targets current Debian naming)
 - `sudo` for apt package installation
-- Network access for Antidote, Nerd Font (workstation), and mise (workstation)
+- Network access for Antidote, FiraCode Nerd Font, and mise (workstation)
 
 ## License
 
