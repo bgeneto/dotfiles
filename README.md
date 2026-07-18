@@ -143,12 +143,62 @@ Shows directory, git branch/status, command duration, exit status, and hostname 
 
 ### Tool versions (mise)
 
+[mise](https://mise.jdx.dev/) installs and activates language runtimes and CLIs.
+It is hooked in every interactive shell when present (workstation / userspace).
+
+**Pin tools for the current directory** (writes `mise.toml`):
+
 ```bash
-mise use --global node@lts    # pin a runtime
-mise install                  # install from ~/.config/mise/config.toml
+mise use node@24 python@3.13
+mise use go@1.24
+mise use rust@stable
+mise use java@temurin-21
 ```
 
-Activated in every interactive shell when `mise` is present (workstation / userspace).
+**Pin globally** (all shells / projects):
+
+```bash
+mise use --global node@24 python@3.13
+mise use --global usage          # shell completions helper used by mise
+```
+
+**Install & inspect:**
+
+```bash
+mise install                     # install everything from mise.toml / config
+mise install node@24             # one tool
+mise ls                          # installed versions
+mise ls-remote node              # available versions
+mise current                     # active versions in this directory
+mise which node                  # path to the resolved binary
+mise upgrade                     # bump to newest matching versions
+```
+
+**Typical developer set:**
+
+```bash
+mise use --global \
+  node@24 \
+  python@3.13 \
+  go@1.24 \
+  ripgrep@latest \
+  jq@latest
+```
+
+**With direnv** — in a project `.envrc`:
+
+```bash
+use mise
+# or: eval "$(mise activate bash)"
+```
+
+Then `direnv allow`. Project tools from `mise.toml` load when you `cd` in.
+
+Config file: `~/.config/mise/config.toml` (from this repo). After editing it:
+
+```bash
+chezmoi apply && mise install
+```
 
 ### Chezmoi maintenance
 
