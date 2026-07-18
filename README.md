@@ -23,7 +23,8 @@ sh -c "$(curl -fsLS https://get.chezmoi.io/lb)" -- \
 
 ## Machine profile
 
-Chosen once on first `chezmoi init` and stored in `~/.config/chezmoi/chezmoi.toml`:
+Chosen once on first `chezmoi init` and stored in `~/.config/chezmoi/chezmoi.toml`.
+Type the full value and press Enter (defaults are shown in brackets):
 
 | Profile | Includes |
 |---|---|
@@ -33,7 +34,7 @@ Chosen once on first `chezmoi init` and stored in `~/.config/chezmoi/chezmoi.tom
 
 ## Elevated vs userspace
 
-Orthogonal to profile — also prompted once:
+Orthogonal to profile — also prompted once (`true` or `false`, then Enter):
 
 | `elevated` | Behavior |
 |---|---|
