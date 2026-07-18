@@ -4,8 +4,6 @@ Debian-focused Zsh environment managed with [chezmoi](https://www.chezmoi.io/).
 
 Stack: **Zsh** · **Antidote** · **Starship** · **fzf** · **eza** · **zoxide** · **bat** · **fd** · **ripgrep** · optional **mise**
 
-Design notes and migration rationale: [docs/Modern Zsh Configuration 2026.md](docs/Modern%20Zsh%20Configuration%202026.md)
-
 ## Quick start
 
 On a new Debian machine:
