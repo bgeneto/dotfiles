@@ -44,20 +44,44 @@ setopt INTERACTIVE_COMMENTS
 # Antidote static plugin bundle
 # ---------------------------------------------------------------------------
 
-typeset -g ANTIDOTE_HOME="$XDG_DATA_HOME/antidote"
+# Where the antidote *source* lives (git clone of mattmc3/antidote).
+typeset -g ANTIDOTE_SRC="${ANTIDOTE_SRC:-$XDG_DATA_HOME/antidote}"
+
+# Antidote's plugin clone directory. Must NOT point at ANTIDOTE_SRC —
+# getantidote/use-omz uses $ANTIDOTE_HOME to locate ohmyzsh/ohmyzsh.
+export ANTIDOTE_HOME="${ANTIDOTE_HOME:-$XDG_CACHE_HOME/antidote}"
+
 typeset -g ZSH_PLUGINS_FILE="$ZDOTDIR/plugins.txt"
 typeset -g ZSH_PLUGINS_BUNDLE="$XDG_CACHE_HOME/zsh/plugins.zsh"
 
-if [[ -r "$ANTIDOTE_HOME/antidote.zsh" ]]; then
+# Oh My Zsh plugins (via use-omz) need these before the bundle is sourced.
+# If $ZSH_CACHE_DIR is empty, docker.plugin.zsh writes to /completions/_docker.
+export ZSH_CACHE_DIR="${ZSH_CACHE_DIR:-$XDG_CACHE_HOME/zsh}"
+mkdir -p "$ZSH_CACHE_DIR/completions"
+
+if [[ -z "${ZSH:-}" ]]; then
+  for _omz in \
+    "$ANTIDOTE_HOME/github.com/ohmyzsh/ohmyzsh" \
+    "$ANTIDOTE_HOME/ohmyzsh/ohmyzsh"
+  do
+    if [[ -d "$_omz" ]]; then
+      export ZSH="$_omz"
+      break
+    fi
+  done
+  unset _omz
+fi
+
+if [[ -r "$ANTIDOTE_SRC/antidote.zsh" ]]; then
   if [[ ! -r "$ZSH_PLUGINS_BUNDLE" ||
         "$ZSH_PLUGINS_FILE" -nt "$ZSH_PLUGINS_BUNDLE" ]]; then
-    source "$ANTIDOTE_HOME/antidote.zsh"
+    source "$ANTIDOTE_SRC/antidote.zsh"
     antidote bundle < "$ZSH_PLUGINS_FILE" >| "$ZSH_PLUGINS_BUNDLE"
   fi
 
   source "$ZSH_PLUGINS_BUNDLE"
 else
-  print -u2 "Antidote not found at $ANTIDOTE_HOME"
+  print -u2 "Antidote not found at $ANTIDOTE_SRC"
 fi
 
 # ---------------------------------------------------------------------------

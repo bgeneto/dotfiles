@@ -1,5 +1,9 @@
 # Compatibility helpers needed by selected Oh My Zsh plugins.
+# Must be first so $ZSH / $ZSH_CACHE_DIR are prepared for OMZ plugins.
 getantidote/use-omz
+
+# Ensure the full Oh My Zsh repo is cloned for use-omz / $ZSH.
+ohmyzsh/ohmyzsh kind:clone
 
 # Only the Oh My Zsh plugins actually used.
 ohmyzsh/ohmyzsh path:plugins/docker
