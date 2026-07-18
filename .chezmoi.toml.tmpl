@@ -1,8 +1,10 @@
 {{- $profiles := list "minimal" "server" "workstation" -}}
 {{- $profile := promptChoiceOnce . "profile" "Machine profile" $profiles "workstation" -}}
+{{- $elevated := promptBoolOnce . "elevated" "Install system packages with sudo/apt (and set login shell)?" true -}}
 
 [data]
     profile = {{ $profile | quote }}
+    elevated = {{ $elevated }}
 
 [diff]
     exclude = ["scripts"]

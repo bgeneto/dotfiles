@@ -1,6 +1,42 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Always ensure XDG dirs exist (no privileges required).
+mkdir -p "$HOME/.local/bin" \
+    "$HOME/.config/zsh/conf.d" \
+    "$HOME/.cache/zsh" \
+    "$HOME/.local/state/zsh"
+
+{{- /* Default elevated=true when key is absent (pre-migration configs). */ -}}
+{{- $elevated := true -}}
+{{- if hasKey . "elevated" -}}
+{{- $elevated = .elevated -}}
+{{- end -}}
+
+{{- if not $elevated }}
+printf 'elevated=false: skipping apt package install\n'
+
+if ! command -v zsh >/dev/null 2>&1; then
+    cat >&2 <<'EOF'
+zsh is required but was not found on PATH.
+
+Without elevated permissions this repo cannot install zsh via apt.
+Ask your administrator to install zsh, or use a host that already has it.
+EOF
+    exit 1
+fi
+
+if ! command -v curl >/dev/null 2>&1 && ! command -v wget >/dev/null 2>&1; then
+    printf 'curl or wget is required for userspace bootstrap\n' >&2
+    exit 1
+fi
+
+if ! command -v git >/dev/null 2>&1; then
+    printf 'git is required for Antidote and chezmoi updates\n' >&2
+    exit 1
+fi
+{{- else }}
+
 if [[ "$(uname -s)" != "Linux" ]] || [[ ! -f /etc/debian_version ]]; then
     exit 0
 fi
@@ -46,11 +82,6 @@ packages+=(
 DEBIAN_FRONTEND=noninteractive \
     "${SUDO[@]}" apt-get install -y "${packages[@]}"
 
-mkdir -p "$HOME/.local/bin" \
-    "$HOME/.config/zsh/conf.d" \
-    "$HOME/.cache/zsh" \
-    "$HOME/.local/state/zsh"
-
 if command -v batcat >/dev/null 2>&1 &&
    ! command -v bat >/dev/null 2>&1; then
     ln -sfn "$(command -v batcat)" "$HOME/.local/bin/bat"
@@ -60,3 +91,4 @@ if command -v fdfind >/dev/null 2>&1 &&
    ! command -v fd >/dev/null 2>&1; then
     ln -sfn "$(command -v fdfind)" "$HOME/.local/bin/fd"
 fi
+{{- end }}

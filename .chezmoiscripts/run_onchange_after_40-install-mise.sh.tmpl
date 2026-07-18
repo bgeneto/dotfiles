@@ -1,13 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-{{- if ne .profile "workstation" }}
+{{- $elevated := true -}}
+{{- if hasKey . "elevated" -}}
+{{- $elevated = .elevated -}}
+{{- end -}}
+
+{{- /* Userspace needs mise for CLIs; workstation uses it for runtimes. */ -}}
+{{- if and $elevated (ne .profile "workstation") }}
 exit 0
 {{- else }}
 
 # Triggers (change these so chezmoi re-runs this script):
 # mise-run-installer-v1
-# {{ include "dot_config/mise/config.toml" | sha256sum }}
+# elevated={{ $elevated }} profile={{ .profile }}
+# {{ include "dot_config/mise/config.toml.tmpl" | sha256sum }}
 #
 # Do not skip the installer just because mise is already on PATH — that would
 # make bumping the trigger above silently ineffective.
@@ -29,4 +36,9 @@ fi
 if [[ -f "$HOME/.config/mise/config.toml" ]]; then
     "$mise_bin" install
 fi
+
+{{- if not $elevated }}
+printf 'elevated=false: shell CLIs installed via mise into your user prefix\n'
+printf 'Ensure ~/.local/bin is on PATH (dot_zshenv adds it).\n'
+{{- end }}
 {{- end }}

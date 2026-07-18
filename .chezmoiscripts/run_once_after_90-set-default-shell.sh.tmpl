@@ -1,6 +1,25 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+{{- $elevated := true -}}
+{{- if hasKey . "elevated" -}}
+{{- $elevated = .elevated -}}
+{{- end -}}
+
+{{- if not $elevated }}
+if command -v zsh >/dev/null 2>&1; then
+    cat <<EOF
+elevated=false: skipped changing the login shell (chsh).
+
+zsh is available at: $(command -v zsh)
+Start it for this session with:  exec zsh
+Or ask your administrator to set your login shell.
+EOF
+else
+    printf 'elevated=false: zsh not found; login shell unchanged\n' >&2
+fi
+{{- else }}
+
 zsh_path="$(command -v zsh)"
 
 if [[ -z "$zsh_path" ]]; then
@@ -17,3 +36,4 @@ fi
 echo
 echo "Changing the default shell to: $zsh_path"
 chsh -s "$zsh_path"
+{{- end }}
