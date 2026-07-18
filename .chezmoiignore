@@ -1,0 +1,7 @@
+README*
+LICENSE*
+.editorconfig
+.gitignore
+docs/**
+.git/**
+**/.DS_Store

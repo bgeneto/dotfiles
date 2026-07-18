@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+zsh_path="$(command -v zsh)"
+
+if [[ -z "$zsh_path" ]]; then
+    echo "zsh is not installed" >&2
+    exit 1
+fi
+
+current_shell="$(getent passwd "$USER" | cut -d: -f7)"
+
+if [[ "$current_shell" == "$zsh_path" ]]; then
+    exit 0
+fi
+
+echo
+echo "Changing the default shell to: $zsh_path"
+chsh -s "$zsh_path"

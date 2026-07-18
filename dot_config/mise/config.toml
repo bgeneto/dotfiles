@@ -1,0 +1,10 @@
+# Global mise tools for workstation profiles.
+# Add versions here, then run: mise install
+#
+# Example:
+# [tools]
+# node = "lts"
+# python = "3.13"
+
+[settings]
+experimental = false

@@ -1,0 +1,11 @@
+{{- $profiles := list "minimal" "server" "workstation" -}}
+{{- $profile := promptChoiceOnce . "profile" "Machine profile" $profiles "workstation" -}}
+
+[data]
+    profile = {{ $profile | quote }}
+
+[diff]
+    exclude = ["scripts"]
+
+[status]
+    exclude = ["scripts"]

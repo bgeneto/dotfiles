@@ -1,0 +1,18 @@
+# Compatibility helpers needed by selected Oh My Zsh plugins.
+getantidote/use-omz
+
+# Only the Oh My Zsh plugins actually used.
+ohmyzsh/ohmyzsh path:plugins/docker
+ohmyzsh/ohmyzsh path:plugins/docker-compose
+ohmyzsh/ohmyzsh path:plugins/extract
+ohmyzsh/ohmyzsh path:plugins/history
+
+# Fuzzy regular Tab completion.
+Aloxaf/fzf-tab
+
+# Interactive enhancements.
+zsh-users/zsh-history-substring-search
+zsh-users/zsh-autosuggestions
+
+# Keep highlighting last because it wraps the ZLE widgets.
+zdharma-continuum/fast-syntax-highlighting

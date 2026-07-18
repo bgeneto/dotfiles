@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ANTIDOTE_HOME="$HOME/.local/share/antidote"
+PLUGIN_FILE="$HOME/.config/zsh/plugins.txt"
+CACHE_DIR="$HOME/.cache/zsh"
+BUNDLE_FILE="$CACHE_DIR/plugins.zsh"
+
+# Plugin configuration checksum:
+# {{ include "dot_config/zsh/plugins.txt" | sha256sum }}
+
+mkdir -p "$CACHE_DIR"
+
+if [[ ! -r "$ANTIDOTE_HOME/antidote.zsh" ]]; then
+    printf 'Antidote not found: %s\n' "$ANTIDOTE_HOME" >&2
+    exit 1
+fi
+
+if [[ ! -r "$PLUGIN_FILE" ]]; then
+    printf 'Plugin file not found: %s\n' "$PLUGIN_FILE" >&2
+    exit 1
+fi
+
+zsh -c "
+    source '$ANTIDOTE_HOME/antidote.zsh'
+    antidote bundle < '$PLUGIN_FILE' >| '$BUNDLE_FILE'
+"
