@@ -1,10 +1,16 @@
 # fzf
 #
 # Ctrl+R: history
-# Ctrl+T: files
-# Alt+C: directories
+# Ctrl+T: files (fd)
+# Alt+C: directories (fd)
 
 if (( $+commands[fzf] )); then
+  if (( $+commands[fd] )); then
+    export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
+    export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+    export FZF_ALT_C_COMMAND='fd --type d --hidden --follow --exclude .git'
+  fi
+
   export FZF_DEFAULT_OPTS="
     --height=60%
     --layout=reverse

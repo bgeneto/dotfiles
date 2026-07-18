@@ -2,7 +2,7 @@
 
 Debian-focused Zsh environment managed with [chezmoi](https://www.chezmoi.io/).
 
-Stack: **Zsh** · **Antidote** · **Starship** · **fzf** · **eza** · **zoxide** · **bat** · **fd** · **ripgrep** · **mise** (userspace / workstation)
+Stack: **Zsh** · **Antidote** · **Starship** · **fzf** / **fzf-tab** · **forgit** · **eza** · **zoxide** · **bat** · **fd** · **ripgrep** · **direnv** · **mise**
 
 ## Quick start
 
@@ -21,6 +21,145 @@ sh -c "$(curl -fsLS https://get.chezmoi.io/lb)" -- \
   init --apply git@github.com:bgeneto/dotfiles.git
 ```
 
+After install, restart the terminal (or `exec zsh`) and select **FiraCode Nerd Font Mono** in your terminal emulator.
+
+## What you get (how to use it)
+
+### Fuzzy finders (fzf)
+
+| Shortcut | Action |
+|---|---|
+| `Ctrl+R` | Search command history |
+| `Ctrl+T` | Insert file path (via `fd`, preview with `bat`/`eza`) |
+| `Alt+C` | `cd` into a directory (via `fd`, tree preview) |
+
+In fzf: type to filter, `Enter` to accept, `Ctrl+C` / `Esc` to cancel. Multi-term queries work (`^foo .go$`).
+
+### Tab completion (fzf-tab)
+
+| Shortcut | Action |
+|---|---|
+| `Tab` | Fuzzy completion menu instead of plain Zsh menu |
+| `<` / `>` | Switch completion groups |
+
+Works for commands, paths, git refs, Docker, etc.
+
+### History & suggestions
+
+| Shortcut / behavior | Action |
+|---|---|
+| `↑` / `↓` | History search matching what you already typed |
+| Grey ghost text | Autosuggestion from history — accept with `→` or `End` |
+| Leading space | Command is **not** saved to history (`HIST_IGNORE_SPACE`) |
+
+Syntax highlighting colors valid/invalid commands as you type.
+
+### Jump directories (zoxide)
+
+Smarter `cd` that learns your habits:
+
+```bash
+z proj          # jump to highest-ranked match for "proj"
+z foo bar       # match path containing both terms
+zi              # interactive picker (fzf-style)
+```
+
+After a few normal `cd`s into a project, `z` will find it by a short fragment.
+
+### Listing & files
+
+| Command | Action |
+|---|---|
+| `ls` / `ll` / `la` / `lt` | `eza` listings (icons, dirs first; `lt` = tree) |
+| `ff [pattern]` | Find files with `fd` |
+| `fdir [pattern]` | Find directories with `fd` |
+| `rg PATTERN` | Search file contents (ripgrep) |
+| `bat FILE` | Syntax-highlighted file view (also used as `PAGER` / man pager) |
+
+### Git (forgit + aliases)
+
+Interactive (fzf-powered) — [forgit](https://github.com/wfxr/forgit):
+
+| Alias | Action |
+|---|---|
+| `ga` | Interactive `git add` |
+| `glo` | Interactive `git log` |
+| `gd` | Interactive `git diff` |
+| `gcf` | Interactive checkout file |
+| `gcb` | Interactive checkout branch |
+| `gbd` | Interactive delete branch |
+| `gclean` | Interactive clean |
+| `gss` | Interactive stash browser |
+| `git forgit …` | Same tools as subcommands |
+
+Fast non-interactive aliases:
+
+| Alias | Action |
+|---|---|
+| `gst` | `git status -sb` |
+| `gsw` | `git switch` |
+| `gpr` | `git pull --rebase` |
+| `gp` | `git push` |
+| `gc` / `gcm` / `gca` | commit / commit -m / amend --no-edit |
+| `gb` | `git branch` |
+
+### Docker
+
+OMZ Docker / Compose plugins add completions and helpers (e.g. `dps`-style aliases from the plugin). Also:
+
+```bash
+dsp    # docker system prune
+```
+
+### Privileges & services
+
+| Shortcut / command | Action |
+|---|---|
+| `Esc` `Esc` | Prefix current / previous command with `sudo` |
+| `sctl …` | `sudo systemctl …` |
+| `uctl …` | `systemctl --user …` |
+| `listen` | Show listening TCP/UDP ports |
+
+### Archives
+
+```bash
+extract archive.tar.gz    # OMZ extract — auto-picks tar/unzip/etc.
+```
+
+### Project environments (direnv)
+
+In a project directory:
+
+```bash
+echo 'export FOO=bar' > .envrc
+direnv allow
+```
+
+Entering/leaving the directory loads/unloads `.envrc` automatically. Works with mise-managed tools.
+
+### Prompt (Starship)
+
+Shows directory, git branch/status, command duration, exit status, and hostname over SSH. No extra keys — just look at the left prompt.
+
+### Tool versions (mise)
+
+```bash
+mise use --global node@lts    # pin a runtime
+mise install                  # install from ~/.config/mise/config.toml
+```
+
+Activated in every interactive shell when `mise` is present (workstation / userspace).
+
+### Chezmoi maintenance
+
+```bash
+chezmoi update          # pull + apply
+chezmoi apply           # apply local source changes
+chezmoi diff            # preview pending changes
+chezmoi edit ~/.zshenv  # edit a managed file
+zplugins-update         # refresh Antidote plugins + rebuild bundle
+```
+
 ## Machine profile
 
 Chosen once on first `chezmoi init` and stored in `~/.config/chezmoi/chezmoi.toml`.
@@ -28,7 +167,7 @@ Type the full value and press Enter (defaults are shown in brackets):
 
 | Profile | Includes |
 |---|---|
-| `minimal` | Zsh stack, Antidote, FiraCode Nerd Font |
+| `minimal` | Full Zsh stack above, Antidote, FiraCode Nerd Font |
 | `server` | minimal + tmux, htop, rsync, ncdu (apt / elevated only) |
 | `workstation` | server + mise language runtimes |
 
@@ -69,16 +208,6 @@ If this machine still has the [legacy gist / zsh4humans](https://gist.github.com
 
 Then restart the terminal (or `exec zsh`).
 
-## Daily use
-
-```bash
-chezmoi update          # pull + apply
-chezmoi apply           # apply local source changes
-chezmoi diff            # preview pending changes
-chezmoi edit ~/.zshenv  # edit a managed file
-zplugins-update         # refresh Antidote plugins + rebuild bundle
-```
-
 ## Layout
 
 ```text
@@ -91,7 +220,7 @@ zplugins-update         # refresh Antidote plugins + rebuild bundle
     ├── zsh/                        → ~/.config/zsh/
     │   ├── dot_zshrc
     │   ├── plugins.txt
-    │   └── conf.d/                 # aliases, completion, fzf, functions
+    │   └── conf.d/                 # aliases, keys, fzf, git, pager, …
     ├── starship.toml               → ~/.config/starship.toml
     └── mise/config.toml.tmpl       → ~/.config/mise/config.toml
 ```

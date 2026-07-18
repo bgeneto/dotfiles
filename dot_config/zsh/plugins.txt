@@ -5,14 +5,21 @@ getantidote/use-omz
 # Ensure the full Oh My Zsh repo is cloned for use-omz / $ZSH.
 ohmyzsh/ohmyzsh kind:clone
 
-# Only the Oh My Zsh plugins actually used.
+# Oh My Zsh plugins.
+ohmyzsh/ohmyzsh path:plugins/sudo
 ohmyzsh/ohmyzsh path:plugins/docker
 ohmyzsh/ohmyzsh path:plugins/docker-compose
 ohmyzsh/ohmyzsh path:plugins/extract
 ohmyzsh/ohmyzsh path:plugins/history
 
-# Fuzzy regular Tab completion.
+# Extra completion definitions (fpath only; cloned for use before/with compinit).
+zsh-users/zsh-completions path:src kind:fpath
+
+# Fuzzy regular Tab completion (after compinit; before widget wrappers).
 Aloxaf/fzf-tab
+
+# Interactive git via fzf.
+wfxr/forgit
 
 # Interactive enhancements.
 zsh-users/zsh-history-substring-search
