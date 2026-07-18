@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+{{- if ne .profile "workstation" }}
+exit 0
+{{- else }}
+
+# mise bootstrap checksum:
+# mise-run-installer-v1
+
+if ! command -v mise >/dev/null 2>&1 &&
+   [[ ! -x "$HOME/.local/bin/mise" ]]; then
+    curl -fsSL https://mise.run | sh
+fi
+
+mise_bin="$(command -v mise 2>/dev/null || true)"
+if [[ -z "$mise_bin" && -x "$HOME/.local/bin/mise" ]]; then
+    mise_bin="$HOME/.local/bin/mise"
+fi
+
+if [[ -z "$mise_bin" ]]; then
+    printf 'mise installation failed\n' >&2
+    exit 1
+fi
+
+if [[ -f "$HOME/.config/mise/config.toml" ]]; then
+    "$mise_bin" install || true
+fi
+{{- end }}

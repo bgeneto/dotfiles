@@ -1,0 +1,117 @@
+# ---------------------------------------------------------------------------
+# Basic environment
+# ---------------------------------------------------------------------------
+
+mkdir -p "$XDG_CACHE_HOME/zsh" "$XDG_STATE_HOME/zsh"
+
+export EDITOR="${EDITOR:-vim}"
+export VISUAL="${VISUAL:-$EDITOR}"
+
+# ---------------------------------------------------------------------------
+# History
+# ---------------------------------------------------------------------------
+
+HISTFILE="$XDG_STATE_HOME/zsh/history"
+HISTSIZE=100000
+SAVEHIST=100000
+
+setopt APPEND_HISTORY
+setopt SHARE_HISTORY
+setopt EXTENDED_HISTORY
+setopt HIST_EXPIRE_DUPS_FIRST
+setopt HIST_IGNORE_DUPS
+setopt HIST_IGNORE_ALL_DUPS
+setopt HIST_SAVE_NO_DUPS
+setopt HIST_REDUCE_BLANKS
+
+# ---------------------------------------------------------------------------
+# General shell behavior
+# ---------------------------------------------------------------------------
+
+setopt AUTO_CD
+setopt GLOB_DOTS
+setopt NO_NOMATCH
+setopt INTERACTIVE_COMMENTS
+
+# ---------------------------------------------------------------------------
+# Early modules (must run before Antidote / fzf-tab)
+# ---------------------------------------------------------------------------
+
+[[ -r "$ZDOTDIR/conf.d/completion.zsh" ]] && source "$ZDOTDIR/conf.d/completion.zsh"
+[[ -r "$ZDOTDIR/conf.d/fzf.zsh" ]] && source "$ZDOTDIR/conf.d/fzf.zsh"
+
+# ---------------------------------------------------------------------------
+# Antidote static plugin bundle
+# ---------------------------------------------------------------------------
+
+typeset -g ANTIDOTE_HOME="$XDG_DATA_HOME/antidote"
+typeset -g ZSH_PLUGINS_FILE="$ZDOTDIR/plugins.txt"
+typeset -g ZSH_PLUGINS_BUNDLE="$XDG_CACHE_HOME/zsh/plugins.zsh"
+
+if [[ -r "$ANTIDOTE_HOME/antidote.zsh" ]]; then
+  if [[ ! -r "$ZSH_PLUGINS_BUNDLE" ||
+        "$ZSH_PLUGINS_FILE" -nt "$ZSH_PLUGINS_BUNDLE" ]]; then
+    source "$ANTIDOTE_HOME/antidote.zsh"
+    antidote bundle < "$ZSH_PLUGINS_FILE" >| "$ZSH_PLUGINS_BUNDLE"
+  fi
+
+  source "$ZSH_PLUGINS_BUNDLE"
+else
+  print -u2 "Antidote not found at $ANTIDOTE_HOME"
+fi
+
+# ---------------------------------------------------------------------------
+# fzf-tab
+# ---------------------------------------------------------------------------
+
+zstyle ':fzf-tab:*' switch-group '<' '>'
+
+zstyle ':fzf-tab:complete:cd:*' fzf-preview \
+  'eza --tree --level=2 --color=always --icons=always -- "$realpath"'
+
+# ---------------------------------------------------------------------------
+# Key bindings
+# ---------------------------------------------------------------------------
+
+bindkey -e
+
+# Prefix-aware history search using the up/down arrows.
+bindkey '^[[A' history-substring-search-up
+bindkey '^[[B' history-substring-search-down
+
+# Alternative terminal escape sequences.
+bindkey '^[OA' history-substring-search-up
+bindkey '^[OB' history-substring-search-down
+
+# ---------------------------------------------------------------------------
+# conf.d modules (aliases, functions, and host-specific settings)
+#
+# Put Intel oneAPI, OpenBLAS, CUDA, proxy or work-machine settings in:
+# ~/.config/zsh/conf.d/*.zsh
+# ---------------------------------------------------------------------------
+
+for rc_file in "$ZDOTDIR"/conf.d/*.zsh(N); do
+  case "${rc_file:t}" in
+    completion.zsh|fzf.zsh) continue ;;
+  esac
+  source "$rc_file"
+done
+
+# ---------------------------------------------------------------------------
+# Navigation, prompt, and development tools
+# ---------------------------------------------------------------------------
+
+if (( $+commands[zoxide] )); then
+  eval "$(zoxide init zsh)"
+fi
+
+if (( $+commands[starship] )); then
+  eval "$(starship init zsh)"
+fi
+
+# Activate mise after other PATH modifications.
+if [[ -x "$HOME/.local/bin/mise" ]]; then
+  eval "$("$HOME/.local/bin/mise" activate zsh)"
+elif (( $+commands[mise] )); then
+  eval "$(mise activate zsh)"
+fi

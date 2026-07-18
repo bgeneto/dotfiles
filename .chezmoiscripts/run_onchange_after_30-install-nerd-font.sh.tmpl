@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+{{- if ne .profile "workstation" }}
+exit 0
+{{- else }}
+
+if [[ "$(uname -s)" != "Linux" ]]; then
+    exit 0
+fi
+
+font_dir="$HOME/.local/share/fonts/JetBrainsMonoNerdFont"
+marker="$font_dir/.chezmoi-installed"
+
+# Font archive URL checksum trigger (bump when changing font source):
+# jetbrainsmono-nerd-font-latest
+
+if [[ -f "$marker" ]]; then
+    exit 0
+fi
+
+mkdir -p "$font_dir"
+
+curl -fsSL \
+    https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz |
+    tar -xJ -C "$font_dir"
+
+if command -v fc-cache >/dev/null 2>&1; then
+    fc-cache -f
+fi
+
+date -u +%Y-%m-%dT%H:%M:%SZ >"$marker"
+
+printf 'Installed JetBrainsMono Nerd Font under %s\n' "$font_dir"
+printf 'Select "JetBrainsMono Nerd Font Mono" in your terminal emulator.\n'
+{{- end }}

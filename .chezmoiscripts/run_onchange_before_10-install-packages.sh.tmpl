@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "$(uname -s)" != "Linux" ]] || [[ ! -f /etc/debian_version ]]; then
+    exit 0
+fi
+
+if [[ "$EUID" -eq 0 ]]; then
+    SUDO=()
+else
+    SUDO=(sudo)
+fi
+
+packages=(
+    zsh
+    git
+    curl
+    wget
+    ca-certificates
+    unzip
+    xz-utils
+    fontconfig
+    fzf
+    starship
+    eza
+    zoxide
+    bat
+    fd-find
+    ripgrep
+    tree
+    jq
+    lsof
+    pigz
+)
+
+{{- if or (eq .profile "server") (eq .profile "workstation") }}
+packages+=(
+    tmux
+    htop
+    rsync
+    ncdu
+)
+{{- end }}
+
+"${SUDO[@]}" apt-get update
+DEBIAN_FRONTEND=noninteractive \
+    "${SUDO[@]}" apt-get install -y "${packages[@]}"
+
+mkdir -p "$HOME/.local/bin" \
+    "$HOME/.config/zsh/conf.d" \
+    "$HOME/.cache/zsh" \
+    "$HOME/.local/state/zsh"
+
+if command -v batcat >/dev/null 2>&1 &&
+   ! command -v bat >/dev/null 2>&1; then
+    ln -sfn "$(command -v batcat)" "$HOME/.local/bin/bat"
+fi
+
+if command -v fdfind >/dev/null 2>&1 &&
+   ! command -v fd >/dev/null 2>&1; then
+    ln -sfn "$(command -v fdfind)" "$HOME/.local/bin/fd"
+fi
