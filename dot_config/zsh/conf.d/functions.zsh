@@ -38,7 +38,7 @@ uctl() {
 
 # Rebuild the static bundle after plugin updates.
 zplugins-update() {
-  source "$ANTIDOTE_HOME/antidote.zsh" || return
+  source "$ANTIDOTE_SRC/antidote.zsh" || return
 
   antidote update || return
   antidote bundle < "$ZSH_PLUGINS_FILE" >| "$ZSH_PLUGINS_BUNDLE"
