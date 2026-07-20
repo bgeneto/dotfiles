@@ -11,37 +11,86 @@ mkdir -p "$HOME/.local/bin" \
 {{- $elevated := true -}}
 {{- if hasKey . "elevated" -}}
 {{- $elevated = .elevated -}}
-{{- end -}}
+{{- end }}
 
-{{- if not $elevated }}
-printf 'elevated=false: skipping apt package install\n'
+# True when we can run privileged commands without a doomed sudo prompt.
+# - root: always
+# - sudo -n: passwordless or cached credentials
+# - sudo/wheel/admin group: likely sudoers (may still prompt for a password)
+can_elevate() {
+    if [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
+        return 0
+    fi
+    if ! command -v sudo >/dev/null 2>&1; then
+        return 1
+    fi
+    if sudo -n true >/dev/null 2>&1; then
+        return 0
+    fi
+    id -nG 2>/dev/null | tr ' ' '\n' | grep -qxE 'sudo|wheel|admin'
+}
 
-if ! command -v zsh >/dev/null 2>&1; then
-    cat >&2 <<'EOF'
+# Best-effort userspace path: require host tools, skip apt/sudo.
+require_userspace_tools() {
+    local missing=0
+
+    if ! command -v zsh >/dev/null 2>&1; then
+        cat >&2 <<'EOF'
 zsh is required but was not found on PATH.
 
 Without elevated permissions this repo cannot install zsh via apt.
 Ask your administrator to install zsh, or use a host that already has it.
 EOF
-    exit 1
-fi
+        missing=1
+    fi
 
-if ! command -v curl >/dev/null 2>&1 && ! command -v wget >/dev/null 2>&1; then
-    printf 'curl or wget is required for userspace bootstrap\n' >&2
-    exit 1
-fi
+    if ! command -v curl >/dev/null 2>&1 && ! command -v wget >/dev/null 2>&1; then
+        printf 'curl or wget is required for userspace bootstrap\n' >&2
+        missing=1
+    fi
 
-if ! command -v git >/dev/null 2>&1; then
-    printf 'git is required for Antidote and chezmoi updates\n' >&2
-    exit 1
-fi
+    if ! command -v git >/dev/null 2>&1; then
+        printf 'git is required for Antidote and chezmoi updates\n' >&2
+        missing=1
+    fi
+
+    return "$missing"
+}
+
+link_debian_alternatives() {
+    if command -v batcat >/dev/null 2>&1 &&
+       ! command -v bat >/dev/null 2>&1; then
+        ln -sfn "$(command -v batcat)" "$HOME/.local/bin/bat"
+    fi
+
+    if command -v fdfind >/dev/null 2>&1 &&
+       ! command -v fd >/dev/null 2>&1; then
+        ln -sfn "$(command -v fdfind)" "$HOME/.local/bin/fd"
+    fi
+}
+
+{{- if not $elevated }}
+printf 'elevated=false: skipping apt package install\n'
+require_userspace_tools
+link_debian_alternatives
 {{- else }}
 
 if [[ "$(uname -s)" != "Linux" ]] || [[ ! -f /etc/debian_version ]]; then
     exit 0
 fi
 
-if [[ "$EUID" -eq 0 ]]; then
+if ! can_elevate; then
+    cat <<'EOF'
+No usable sudo access; skipping apt package install.
+Continuing with tools already available on this host.
+Missing shell CLIs will be installed later via mise into ~/.local.
+EOF
+    require_userspace_tools
+    link_debian_alternatives
+    exit 0
+fi
+
+if [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
     SUDO=()
 else
     SUDO=(sudo)
@@ -83,13 +132,5 @@ packages+=(
 DEBIAN_FRONTEND=noninteractive \
     "${SUDO[@]}" apt-get install -y "${packages[@]}"
 
-if command -v batcat >/dev/null 2>&1 &&
-   ! command -v bat >/dev/null 2>&1; then
-    ln -sfn "$(command -v batcat)" "$HOME/.local/bin/bat"
-fi
-
-if command -v fdfind >/dev/null 2>&1 &&
-   ! command -v fd >/dev/null 2>&1; then
-    ln -sfn "$(command -v fdfind)" "$HOME/.local/bin/fd"
-fi
+link_debian_alternatives
 {{- end }}

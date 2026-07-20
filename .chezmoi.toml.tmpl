@@ -5,7 +5,18 @@
 {{-   exit 1 -}}
 {{- end -}}
 
-{{- $elevatedRaw := promptStringOnce . "elevated" "Install system packages with sudo/apt and set login shell? (true / false)" "true" -}}
+{{- /* Prefer elevated=false when this user cannot use sudo/apt. */ -}}
+{{- $defaultElevated := "false" -}}
+{{- if eq (output "id" "-u" | trim) "0" -}}
+{{-   $defaultElevated = "true" -}}
+{{- else -}}
+{{-   $groups := output "id" "-nG" | trim -}}
+{{-   if or (contains " sudo " (printf " %s " $groups)) (contains " wheel " (printf " %s " $groups)) (contains " admin " (printf " %s " $groups)) -}}
+{{-     $defaultElevated = "true" -}}
+{{-   end -}}
+{{- end -}}
+
+{{- $elevatedRaw := promptStringOnce . "elevated" "Install system packages with sudo/apt and set login shell? (true / false)" $defaultElevated -}}
 {{- $elevatedRaw = trim (lower $elevatedRaw) -}}
 {{- if and (ne $elevatedRaw "true") (ne $elevatedRaw "false") (ne $elevatedRaw "yes") (ne $elevatedRaw "no") (ne $elevatedRaw "y") (ne $elevatedRaw "n") -}}
 {{-   writeToStdout (printf "Invalid elevated value %q; expected true or false\n" $elevatedRaw) -}}
