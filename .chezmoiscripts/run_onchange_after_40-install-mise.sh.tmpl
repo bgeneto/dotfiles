@@ -8,23 +8,27 @@ set -euo pipefail
 {{- end }}
 
 # Triggers (change these so chezmoi re-runs this script):
-# mise-run-installer-v5
+# mise-run-installer-v6
 # elevated={{ $elevated }} profile={{ .profile }}
 # {{ include "dot_config/mise/config.toml.tmpl" | sha256sum }}
 #
 # Do not skip the installer just because mise is already on PATH — that would
 # make bumping the trigger above silently ineffective.
 
-# Gap CLIs are symlinked into ~/.local/bin (see link_mise_gap_bins). Ensure
-# that directory is searchable during this bootstrap script too.
+# Gap CLIs end up on PATH via:
+#   1) mise activate (reads conf.d/shell-clis.toml) — early in .zshrc
+#   2) symlinks in ~/.local/bin (dot_zshenv) — works even before activate
 export PATH="$HOME/.local/bin:$PATH"
-mkdir -p "$HOME/.local/bin"
+mkdir -p "$HOME/.local/bin" "$HOME/.config/mise/conf.d"
+
+# Not managed by chezmoi — shell CLI pins that must survive chezmoi apply.
+MISE_SHELL_CLIS_CONFIG="$HOME/.config/mise/conf.d/shell-clis.toml"
 
 ensure_mise() {
     # Keep installer chatter off stdout so callers can capture the binary path.
-    # MISE_INSTALL_HELP=0 suppresses upstream "append activate to bashrc/zshrc"
-    # advice — this repo already activates mise in ~/.config/zsh/.zshrc.
-    MISE_INSTALL_HELP=0 curl -fsSL https://mise.run | sh >&2
+    # MISE_INSTALL_HELP must be set on `sh` (the installer), not on `curl`.
+    # This repo already activates mise in ~/.config/zsh/.zshrc.
+    curl -fsSL https://mise.run | MISE_INSTALL_HELP=0 sh >&2
 
     if [[ -x "$HOME/.local/bin/mise" ]]; then
         printf '%s\n' "$HOME/.local/bin/mise"
@@ -63,17 +67,25 @@ mise_tool_prefix() {
 
     [[ -d "$installs" ]] || return 1
 
+    # Prefer the `latest` alias mise creates (symlink to the real version dir).
     if [[ -e "$installs/latest" ]]; then
         printf '%s\n' "$installs/latest"
         return 0
     fi
 
-    latest="$(find "$installs" -mindepth 1 -maxdepth 1 \( -type d -o -type l \) -printf '%f\n' 2>/dev/null | sort -V | tail -1)"
+    # Skip short alias dirs (1, 1.26) — pick the fullest version directory.
+    latest="$(find "$installs" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' 2>/dev/null \
+        | grep -E '^[0-9]+\.[0-9]+\.[0-9]+' \
+        | sort -V \
+        | tail -1)"
+    if [[ -z "$latest" ]]; then
+        latest="$(find "$installs" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' 2>/dev/null | sort -V | tail -1)"
+    fi
     [[ -n "$latest" ]] || return 1
     printf '%s\n' "$installs/$latest"
 }
 
-# Locate the executable for a tool@version already on disk.
+# Locate the executable for a tool already on disk.
 mise_tool_bin_path() {
     local mise_bin="$1"
     local tool="$2"
@@ -104,9 +116,8 @@ mise_tool_bin_path() {
     printf '%s\n' "$src"
 }
 
-# mise install alone leaves tools under ~/.local/share/mise/installs and off
-# PATH. Symlink their bins into ~/.local/bin so zsh hooks (starship/fzf/…) see
-# them without putting shell CLIs into chezmoi-managed mise config.toml.
+# Symlink gap CLIs into ~/.local/bin so they are on PATH via dot_zshenv even
+# before `mise activate` runs (and if activate is skipped).
 link_mise_gap_bins() {
     local mise_bin="$1"
     shift
@@ -207,8 +218,11 @@ printf 'mise is activated by this repo in ~/.config/zsh/.zshrc (mise activate zs
 printf 'Do not append activate lines to bashrc/zshrc.\n'
 
 if [[ ${#missing_required[@]} -gt 0 ]]; then
-    printf 'Installing missing required CLIs via mise: %s\n' "${missing_required[*]}"
-    "$mise_bin" install "${missing_required[@]}"
+    printf 'Installing+activating missing CLIs via mise: %s\n' "${missing_required[*]}"
+    # `mise install` alone leaves tools off PATH ("installed but not activated").
+    # `mise use --path` installs AND registers them in a chezmoi-safe conf.d file
+    # that `mise activate` loads — without rewriting chezmoi-managed config.toml.
+    "$mise_bin" use -y --path "$MISE_SHELL_CLIS_CONFIG" "${missing_required[@]}"
     printf 'Linking gap CLIs into ~/.local/bin (on PATH via dot_zshenv):\n'
     link_mise_gap_bins "$mise_bin" "${missing_required[@]}"
     if ! verify_gap_bins "${missing_required[@]}"; then
@@ -220,3 +234,6 @@ fi
 if [[ -f "$HOME/.config/mise/config.toml" ]]; then
     "$mise_bin" install
 fi
+
+printf '\nGap CLIs are on PATH for new shells. Reload now:\n'
+printf '  exec zsh\n'

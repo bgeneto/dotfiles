@@ -45,6 +45,16 @@ setopt NO_NOMATCH
 setopt INTERACTIVE_COMMENTS
 
 # ---------------------------------------------------------------------------
+# mise — activate early so gap CLIs (starship, fzf, …) are on PATH for hooks
+# ---------------------------------------------------------------------------
+
+if [[ -x "$HOME/.local/bin/mise" ]]; then
+  eval "$("$HOME/.local/bin/mise" activate zsh)"
+elif (( $+commands[mise] )); then
+  eval "$(mise activate zsh)"
+fi
+
+# ---------------------------------------------------------------------------
 # Early modules (must run before Antidote / fzf-tab)
 # ---------------------------------------------------------------------------
 
@@ -134,15 +144,8 @@ if (( $+commands[starship] )); then
   eval "$(starship init zsh)"
 else
   # Default prompt looks like "hostname%" — almost always means starship is
-  # missing from PATH (e.g. mise install without ~/.local/bin symlink).
+  # missing from PATH (mise gap install without activation/symlink).
   print -u2 "dotfiles: starship not on PATH; run chezmoi apply or check ~/.local/bin"
-fi
-
-# Activate mise after other PATH modifications.
-if [[ -x "$HOME/.local/bin/mise" ]]; then
-  eval "$("$HOME/.local/bin/mise" activate zsh)"
-elif (( $+commands[mise] )); then
-  eval "$(mise activate zsh)"
 fi
 
 # direnv last so project .envrc can override tools/PATH from above.
