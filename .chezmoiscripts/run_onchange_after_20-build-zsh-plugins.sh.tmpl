@@ -8,13 +8,39 @@ BUNDLE_FILE="$CACHE_DIR/plugins.zsh"
 
 # Plugin configuration checksum:
 # {{ include "dot_config/zsh/plugins.txt" | sha256sum }}
+# antidote-userspace-clone-v1
 
 mkdir -p "$CACHE_DIR/completions"
 
-if [[ ! -r "$ANTIDOTE_SRC/antidote.zsh" ]]; then
-    printf 'Antidote not found: %s\n' "$ANTIDOTE_SRC" >&2
-    exit 1
-fi
+# Antidote is pure userspace — official install is a git clone (no sudo).
+# chezmoiexternal.toml usually plants it; if apply order or a fresh host
+# leaves it missing, clone it here before bundling plugins.
+ensure_antidote() {
+    if [[ -r "$ANTIDOTE_SRC/antidote.zsh" ]]; then
+        return 0
+    fi
+
+    if ! command -v git >/dev/null 2>&1; then
+        printf 'git is required to install antidote into %s\n' "$ANTIDOTE_SRC" >&2
+        return 1
+    fi
+
+    printf 'Installing antidote (userspace): git clone → %s\n' "$ANTIDOTE_SRC"
+    mkdir -p "$(dirname "$ANTIDOTE_SRC")"
+    local tmp
+    tmp="$(mktemp -d "${TMPDIR:-/tmp}/antidote.XXXXXX")"
+    git clone --depth=1 https://github.com/mattmc3/antidote.git "$tmp/antidote"
+    rm -rf "$ANTIDOTE_SRC"
+    mv "$tmp/antidote" "$ANTIDOTE_SRC"
+    rmdir "$tmp" 2>/dev/null || rm -rf "$tmp"
+
+    if [[ ! -r "$ANTIDOTE_SRC/antidote.zsh" ]]; then
+        printf 'Antidote clone failed: %s/antidote.zsh missing\n' "$ANTIDOTE_SRC" >&2
+        return 1
+    fi
+}
+
+ensure_antidote
 
 if [[ ! -r "$PLUGIN_FILE" ]]; then
     printf 'Plugin file not found: %s\n' "$PLUGIN_FILE" >&2
