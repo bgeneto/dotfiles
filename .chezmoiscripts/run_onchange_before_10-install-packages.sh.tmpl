@@ -13,21 +13,16 @@ mkdir -p "$HOME/.local/bin" \
 {{- $elevated = .elevated -}}
 {{- end }}
 
-# True when we can run privileged commands without a doomed sudo prompt.
+# True when we can run privileged commands without prompting for a password.
 # - root: always
-# - sudo -n: passwordless or cached credentials
-# - sudo/wheel/admin group: likely sudoers (may still prompt for a password)
+# - sudo -n: passwordless or already-cached credentials only
+# Never treat group membership as sufficient — that would call sudo interactively.
 can_elevate() {
     if [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
         return 0
     fi
-    if ! command -v sudo >/dev/null 2>&1; then
-        return 1
-    fi
-    if sudo -n true >/dev/null 2>&1; then
-        return 0
-    fi
-    id -nG 2>/dev/null | tr ' ' '\n' | grep -qxE 'sudo|wheel|admin'
+    command -v sudo >/dev/null 2>&1 || return 1
+    sudo -n true >/dev/null 2>&1
 }
 
 # Best-effort userspace path: require host tools, skip apt/sudo.
