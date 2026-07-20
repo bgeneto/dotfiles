@@ -8,16 +8,23 @@ set -euo pipefail
 {{- end }}
 
 # Triggers (change these so chezmoi re-runs this script):
-# mise-run-installer-v4
+# mise-run-installer-v5
 # elevated={{ $elevated }} profile={{ .profile }}
 # {{ include "dot_config/mise/config.toml.tmpl" | sha256sum }}
 #
 # Do not skip the installer just because mise is already on PATH — that would
 # make bumping the trigger above silently ineffective.
 
+# Gap CLIs are symlinked into ~/.local/bin (see link_mise_gap_bins). Ensure
+# that directory is searchable during this bootstrap script too.
+export PATH="$HOME/.local/bin:$PATH"
+mkdir -p "$HOME/.local/bin"
+
 ensure_mise() {
     # Keep installer chatter off stdout so callers can capture the binary path.
-    curl -fsSL https://mise.run | sh >&2
+    # MISE_INSTALL_HELP=0 suppresses upstream "append activate to bashrc/zshrc"
+    # advice — this repo already activates mise in ~/.config/zsh/.zshrc.
+    MISE_INSTALL_HELP=0 curl -fsSL https://mise.run | sh >&2
 
     if [[ -x "$HOME/.local/bin/mise" ]]; then
         printf '%s\n' "$HOME/.local/bin/mise"
@@ -37,6 +44,110 @@ has_cmd() {
 fzf_is_usable() {
     has_cmd fzf || return 1
     fzf --help 2>&1 | grep -q -- '--zsh'
+}
+
+# Primary PATH name for a mise tool (ripgrep → rg).
+mise_tool_bin_name() {
+    case "$1" in
+        ripgrep) printf 'rg\n' ;;
+        *) printf '%s\n' "$1" ;;
+    esac
+}
+
+# Resolve the install prefix for an already-installed mise tool.
+mise_tool_prefix() {
+    local tool="$1"
+    local data_dir="${MISE_DATA_DIR:-$HOME/.local/share/mise}"
+    local installs="$data_dir/installs/$tool"
+    local latest
+
+    [[ -d "$installs" ]] || return 1
+
+    if [[ -e "$installs/latest" ]]; then
+        printf '%s\n' "$installs/latest"
+        return 0
+    fi
+
+    latest="$(find "$installs" -mindepth 1 -maxdepth 1 \( -type d -o -type l \) -printf '%f\n' 2>/dev/null | sort -V | tail -1)"
+    [[ -n "$latest" ]] || return 1
+    printf '%s\n' "$installs/$latest"
+}
+
+# Locate the executable for a tool@version already on disk.
+mise_tool_bin_path() {
+    local mise_bin="$1"
+    local tool="$2"
+    local bin_name="$3"
+    local ver src prefix
+
+    ver="$("$mise_bin" ls --installed "$tool" 2>/dev/null | awk 'NF >= 2 { print $2; exit }')"
+    if [[ -n "$ver" ]]; then
+        src="$("$mise_bin" which "$bin_name" --tool="${tool}@${ver}" 2>/dev/null || true)"
+        if [[ -n "$src" && -x "$src" ]]; then
+            printf '%s\n' "$src"
+            return 0
+        fi
+    fi
+
+    prefix="$(mise_tool_prefix "$tool")" || return 1
+    if [[ -x "$prefix/bin/$bin_name" ]]; then
+        printf '%s\n' "$prefix/bin/$bin_name"
+        return 0
+    fi
+    if [[ -x "$prefix/$bin_name" ]]; then
+        printf '%s\n' "$prefix/$bin_name"
+        return 0
+    fi
+
+    src="$(find "$prefix" -maxdepth 3 \( -type f -o -type l \) -name "$bin_name" 2>/dev/null | head -1)"
+    [[ -n "$src" && -x "$src" ]] || return 1
+    printf '%s\n' "$src"
+}
+
+# mise install alone leaves tools under ~/.local/share/mise/installs and off
+# PATH. Symlink their bins into ~/.local/bin so zsh hooks (starship/fzf/…) see
+# them without putting shell CLIs into chezmoi-managed mise config.toml.
+link_mise_gap_bins() {
+    local mise_bin="$1"
+    shift
+    local spec tool bin_name src dest
+
+    for spec in "$@"; do
+        tool="${spec%%@*}"
+        bin_name="$(mise_tool_bin_name "$tool")"
+        dest="$HOME/.local/bin/$bin_name"
+
+        if ! src="$(mise_tool_bin_path "$mise_bin" "$tool" "$bin_name")"; then
+            printf 'warning: could not locate mise binary for %s (%s)\n' "$spec" "$bin_name" >&2
+            continue
+        fi
+
+        # Never clobber a real file; replace only missing paths or our symlinks.
+        if [[ -e "$dest" && ! -L "$dest" ]]; then
+            printf 'skip %s: %s exists and is not a symlink\n' "$bin_name" "$dest" >&2
+            continue
+        fi
+
+        ln -sfn "$src" "$dest"
+        printf 'linked %s -> %s\n' "$dest" "$src"
+    done
+}
+
+verify_gap_bins() {
+    local spec tool bin_name
+    local failed=0
+
+    for spec in "$@"; do
+        tool="${spec%%@*}"
+        bin_name="$(mise_tool_bin_name "$tool")"
+        if has_cmd "$bin_name"; then
+            printf 'ok: %s -> %s\n' "$bin_name" "$(command -v "$bin_name")"
+        else
+            printf 'missing on PATH: %s (expected under ~/.local/bin)\n' "$bin_name" >&2
+            failed=1
+        fi
+    done
+    return "$failed"
 }
 
 # Required shell CLIs for this dotfiles stack.
@@ -92,11 +203,18 @@ if [[ "$need_mise" -eq 0 ]]; then
 fi
 
 mise_bin="$(ensure_mise)"
+printf 'mise is activated by this repo in ~/.config/zsh/.zshrc (mise activate zsh).\n'
+printf 'Do not append activate lines to bashrc/zshrc.\n'
 
 if [[ ${#missing_required[@]} -gt 0 ]]; then
     printf 'Installing missing required CLIs via mise: %s\n' "${missing_required[*]}"
     "$mise_bin" install "${missing_required[@]}"
-    printf 'Ensure ~/.local/bin is on PATH (dot_zshenv adds it).\n'
+    printf 'Linking gap CLIs into ~/.local/bin (on PATH via dot_zshenv):\n'
+    link_mise_gap_bins "$mise_bin" "${missing_required[@]}"
+    if ! verify_gap_bins "${missing_required[@]}"; then
+        printf 'error: some gap CLIs are still not on PATH after linking\n' >&2
+        exit 1
+    fi
 fi
 
 if [[ -f "$HOME/.config/mise/config.toml" ]]; then
