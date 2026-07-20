@@ -230,7 +230,7 @@ Orthogonal to profile — prompted once (`true` / `false`). Default is `true` on
 | Step | Behavior |
 |---|---|
 | Host tools | Require `zsh`, `git`, and `curl`/`wget` already on PATH |
-| Required CLIs | Prefer system `eza`, `starship`, `fzf`, …; install **only gaps** with mise and symlink bins into `~/.local/bin` |
+| Required CLIs | Prefer system `eza`, `starship`, `fzf`, …; gaps via `mise use` → `~/.config/mise/conf.d/shell-clis.toml` + symlinks in `~/.local/bin` |
 | Non-required | Missing `tree` / `tmux` / `htop` / etc. are ignored (no auto-install) |
 | `elevated=true` | Optional bonus: if passwordless sudo works, also `apt install` the package set + allow `chsh` |
 
@@ -288,7 +288,7 @@ Host-specific settings (oneAPI, CUDA, proxies, etc.) go under:
 - Network access for Antidote, FiraCode Nerd Font, and mise
 - Userspace-first: **sudo is never required** (and never prompted for)
 - Host must provide `zsh`, `git`, and `curl`/`wget`
-- Required CLIs (`eza`, `starship`, …): use system binaries; mise installs gaps and symlinks them into `~/.local/bin`
+- Required CLIs (`eza`, `starship`, …): prefer system binaries; gaps via mise `conf.d/shell-clis.toml` + `~/.local/bin` symlinks
 - **elevated=true:** optional passwordless apt + `chsh` when available
 
 

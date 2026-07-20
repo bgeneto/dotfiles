@@ -2,9 +2,8 @@
 # After changing this file: chezmoi apply && mise install
 #
 # Shell CLIs (eza, starship, …) are NOT listed here on purpose.
-# Bootstrap prefers binaries already on the host; the mise script only
-# installs gaps, then symlinks their bins into ~/.local/bin (on PATH via
-# dot_zshenv) so zsh hooks see them without mise use / [tools] entries.
+# Bootstrap prefers host binaries; gaps go into conf.d/shell-clis.toml via
+# `mise use --path` (chezmoi-safe) and are also symlinked into ~/.local/bin.
 
 {{- $elevated := true -}}
 {{- if hasKey . "elevated" -}}
