@@ -5,13 +5,13 @@
 {{-   exit 1 -}}
 {{- end -}}
 
-{{- /* Prefer elevated=false when this user cannot use sudo/apt. */ -}}
+{{- /* Prefer elevated=false unless passwordless root/sudo is available now.
+     Group membership alone is not enough — that would still prompt for a password. */ -}}
 {{- $defaultElevated := "false" -}}
 {{- if eq (output "id" "-u" | trim) "0" -}}
 {{-   $defaultElevated = "true" -}}
 {{- else -}}
-{{-   $groups := output "id" "-nG" | trim -}}
-{{-   if or (contains " sudo " (printf " %s " $groups)) (contains " wheel " (printf " %s " $groups)) (contains " admin " (printf " %s " $groups)) -}}
+{{-   if eq ((output "sh" "-c" "command -v sudo >/dev/null && sudo -n true >/dev/null 2>&1 && echo yes || echo no") | trim) "yes" -}}
 {{-     $defaultElevated = "true" -}}
 {{-   end -}}
 {{- end -}}

@@ -223,14 +223,14 @@ Type the full value and press Enter (defaults are shown in brackets):
 
 ## Elevated vs userspace
 
-Orthogonal to profile — also prompted once (`true` or `false`, then Enter). The default is `true` when you are root or in the `sudo`/`wheel`/`admin` group; otherwise `false`:
+Orthogonal to profile — also prompted once (`true` or `false`, then Enter). The default is `true` only when you are root or already have passwordless/`sudo -n` access; otherwise `false`:
 
 | `elevated` | Behavior |
 |---|---|
 | `true` | `sudo apt` installs packages; `chsh` sets login shell |
 | `false` | no sudo/apt/chsh; shell CLIs installed with **mise** into your user prefix |
 
-If `elevated=true` but this account cannot use sudo (not root, no passwordless sudo, not in an admin group), apt is skipped automatically and missing shell CLIs are installed with mise into `~/.local` instead.
+Bootstrap never prompts for a sudo password. If `elevated=true` but `sudo -n` is unavailable, apt is skipped and missing shell CLIs are installed with mise into `~/.local` instead.
 
 Userspace mode still requires these to be preinstalled on the host:
 
@@ -287,7 +287,7 @@ Host-specific settings (oneAPI, CUDA, proxies, etc.) go under:
 
 - Debian (13 recommended when using apt)
 - Network access for Antidote, FiraCode Nerd Font, and mise
-- **elevated=true:** `sudo` for apt when available; ability to run `chsh` (falls back to host tools if sudo is missing)
+- **elevated=true:** passwordless `sudo`/`root` for apt when available; `chsh` for login shell (falls back to host tools + mise if `sudo -n` fails)
 - **elevated=false:** preinstalled `zsh`, `git`, and `curl`/`wget`
 
 ## License
