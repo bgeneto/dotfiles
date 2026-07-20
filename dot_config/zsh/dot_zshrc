@@ -132,6 +132,10 @@ fi
 
 if (( $+commands[starship] )); then
   eval "$(starship init zsh)"
+else
+  # Default prompt looks like "hostname%" — almost always means starship is
+  # missing from PATH (e.g. mise install without ~/.local/bin symlink).
+  print -u2 "dotfiles: starship not on PATH; run chezmoi apply or check ~/.local/bin"
 fi
 
 # Activate mise after other PATH modifications.

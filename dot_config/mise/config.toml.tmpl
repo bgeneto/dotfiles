@@ -3,7 +3,8 @@
 #
 # Shell CLIs (eza, starship, …) are NOT listed here on purpose.
 # Bootstrap prefers binaries already on the host; the mise script only
-# installs gaps into ~/.local when something required is missing.
+# installs gaps, then symlinks their bins into ~/.local/bin (on PATH via
+# dot_zshenv) so zsh hooks see them without mise use / [tools] entries.
 
 {{- $elevated := true -}}
 {{- if hasKey . "elevated" -}}
