@@ -1,5 +1,9 @@
 # mise tools — managed by chezmoi (templated from elevated/profile).
 # After changing this file: chezmoi apply && mise install
+#
+# Shell CLIs (eza, starship, …) are NOT listed here on purpose.
+# Bootstrap prefers binaries already on the host; the mise script only
+# installs gaps into ~/.local when something required is missing.
 
 {{- $elevated := true -}}
 {{- if hasKey . "elevated" -}}
@@ -10,19 +14,6 @@
 experimental = false
 
 [tools]
-{{- if not $elevated }}
-# Userspace shell CLIs (no apt/sudo). Short names use mise's registry backends.
-eza = "latest"
-starship = "latest"
-zoxide = "latest"
-bat = "latest"
-fd = "latest"
-ripgrep = "latest"
-fzf = "latest"
-jq = "latest"
-direnv = "latest"
-{{- end }}
-
 {{- if eq .profile "workstation" }}
 # Language runtimes / CLIs for workstation profiles.
 # Prefer `mise use` in a project (writes mise.toml) or uncomment globals here:

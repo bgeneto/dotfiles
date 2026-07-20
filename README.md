@@ -223,22 +223,21 @@ Type the full value and press Enter (defaults are shown in brackets):
 
 ## Elevated vs userspace
 
-Orthogonal to profile — also prompted once (`true` or `false`, then Enter). The default is `true` only when you are root or already have passwordless/`sudo -n` access; otherwise `false`:
+This is a **userspace** dotfiles bootstrap: **sudo is never required** and never prompted for.
 
-| `elevated` | Behavior |
+Orthogonal to profile — prompted once (`true` / `false`). Default is `true` only when root or `sudo -n` already works; otherwise `false`.
+
+| Step | Behavior |
 |---|---|
-| `true` | `sudo apt` installs packages; `chsh` sets login shell |
-| `false` | no sudo/apt/chsh; shell CLIs installed with **mise** into your user prefix |
+| Host tools | Require `zsh`, `git`, and `curl`/`wget` already on PATH |
+| Required CLIs | Prefer system `eza`, `starship`, `fzf`, …; install **only gaps** with mise into `~/.local` |
+| Non-required | Missing `tree` / `tmux` / `htop` / etc. are ignored (no auto-install) |
+| `elevated=true` | Optional bonus: if passwordless sudo works, also `apt install` the package set + allow `chsh` |
 
-Bootstrap never prompts for a sudo password. If `elevated=true` but `sudo -n` is unavailable, apt is skipped and missing shell CLIs are installed with mise into `~/.local` instead.
-
-Userspace mode still requires these to be preinstalled on the host:
-
-- `zsh`
-- `git`
-- `curl` (or `wget`)
-
-Server extras (`tmux`, `htop`, `rsync`, `ncdu`) are apt-only. Without elevation, install them yourself or omit them.
+| `elevated` | Meaning |
+|---|---|
+| `false` (typical) | Pure userspace: host tools + mise for missing required CLIs |
+| `true` | Same, plus optional passwordless apt/`chsh` when available |
 
 Change later in `~/.config/chezmoi/chezmoi.toml`:
 
@@ -287,8 +286,11 @@ Host-specific settings (oneAPI, CUDA, proxies, etc.) go under:
 
 - Debian (13 recommended when using apt)
 - Network access for Antidote, FiraCode Nerd Font, and mise
-- **elevated=true:** passwordless `sudo`/`root` for apt when available; `chsh` for login shell (falls back to host tools + mise if `sudo -n` fails)
-- **elevated=false:** preinstalled `zsh`, `git`, and `curl`/`wget`
+- Userspace-first: **sudo is never required** (and never prompted for)
+- Host must provide `zsh`, `git`, and `curl`/`wget`
+- Required CLIs (`eza`, `starship`, …): use system binaries, mise only for gaps
+- **elevated=true:** optional passwordless apt + `chsh` when available
+
 
 ## License
 

@@ -5,8 +5,7 @@
 {{-   exit 1 -}}
 {{- end -}}
 
-{{- /* Prefer elevated=false unless passwordless root/sudo is available now.
-     Group membership alone is not enough — that would still prompt for a password. */ -}}
+{{- /* Userspace-first: default false. Opt into apt only when passwordless sudo works. */ -}}
 {{- $defaultElevated := "false" -}}
 {{- if eq (output "id" "-u" | trim) "0" -}}
 {{-   $defaultElevated = "true" -}}
@@ -16,7 +15,7 @@
 {{-   end -}}
 {{- end -}}
 
-{{- $elevatedRaw := promptStringOnce . "elevated" "Install system packages with sudo/apt and set login shell? (true / false)" $defaultElevated -}}
+{{- $elevatedRaw := promptStringOnce . "elevated" "Also use sudo/apt for system packages when passwordless sudo is available? (true / false)" $defaultElevated -}}
 {{- $elevatedRaw = trim (lower $elevatedRaw) -}}
 {{- if and (ne $elevatedRaw "true") (ne $elevatedRaw "false") (ne $elevatedRaw "yes") (ne $elevatedRaw "no") (ne $elevatedRaw "y") (ne $elevatedRaw "n") -}}
 {{-   writeToStdout (printf "Invalid elevated value %q; expected true or false\n" $elevatedRaw) -}}

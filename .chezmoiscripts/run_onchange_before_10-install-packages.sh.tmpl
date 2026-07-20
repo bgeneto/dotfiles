@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Always ensure XDG dirs exist (no privileges required).
+# Userspace-first bootstrap. Sudo/apt is optional and never required.
+# Never prompt for a sudo password.
+
 mkdir -p "$HOME/.local/bin" \
     "$HOME/.config/zsh/conf.d" \
     "$HOME/.cache/zsh" \
@@ -13,10 +15,6 @@ mkdir -p "$HOME/.local/bin" \
 {{- $elevated = .elevated -}}
 {{- end }}
 
-# True when we can run privileged commands without prompting for a password.
-# - root: always
-# - sudo -n: passwordless or already-cached credentials only
-# Never treat group membership as sufficient — that would call sudo interactively.
 can_elevate() {
     if [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
         return 0
@@ -25,27 +23,26 @@ can_elevate() {
     sudo -n true >/dev/null 2>&1
 }
 
-# Best-effort userspace path: require host tools, skip apt/sudo.
-require_userspace_tools() {
+# Must already be on the host (not installed by this userspace script).
+require_host_tools() {
     local missing=0
 
     if ! command -v zsh >/dev/null 2>&1; then
         cat >&2 <<'EOF'
 zsh is required but was not found on PATH.
 
-Without elevated permissions this repo cannot install zsh via apt.
-Ask your administrator to install zsh, or use a host that already has it.
+Install zsh with your OS package manager (or ask an administrator), then re-run.
 EOF
         missing=1
     fi
 
     if ! command -v curl >/dev/null 2>&1 && ! command -v wget >/dev/null 2>&1; then
-        printf 'curl or wget is required for userspace bootstrap\n' >&2
+        printf 'curl or wget is required but was not found on PATH\n' >&2
         missing=1
     fi
 
     if ! command -v git >/dev/null 2>&1; then
-        printf 'git is required for Antidote and chezmoi updates\n' >&2
+        printf 'git is required but was not found on PATH\n' >&2
         missing=1
     fi
 
@@ -64,68 +61,54 @@ link_debian_alternatives() {
     fi
 }
 
-{{- if not $elevated }}
-printf 'elevated=false: skipping apt package install\n'
-require_userspace_tools
-link_debian_alternatives
-{{- else }}
+# Optional convenience: if the user opted in AND passwordless sudo works,
+# install packages system-wide. This is never required for bootstrap.
+{{- if $elevated }}
+if [[ "$(uname -s)" == "Linux" ]] && [[ -f /etc/debian_version ]] && can_elevate; then
+    if [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
+        SUDO=()
+    else
+        SUDO=(sudo)
+    fi
 
-if [[ "$(uname -s)" != "Linux" ]] || [[ ! -f /etc/debian_version ]]; then
-    exit 0
-fi
-
-if ! can_elevate; then
-    cat <<'EOF'
-No usable sudo access; skipping apt package install.
-Continuing with tools already available on this host.
-Missing shell CLIs will be installed later via mise into ~/.local.
-EOF
-    require_userspace_tools
-    link_debian_alternatives
-    exit 0
-fi
-
-if [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
-    SUDO=()
-else
-    SUDO=(sudo)
-fi
-
-packages=(
-    zsh
-    git
-    curl
-    wget
-    ca-certificates
-    unzip
-    xz-utils
-    fontconfig
-    fzf
-    starship
-    eza
-    zoxide
-    bat
-    fd-find
-    ripgrep
-    direnv
-    tree
-    jq
-    lsof
-    pigz
-)
+    packages=(
+        zsh
+        git
+        curl
+        wget
+        ca-certificates
+        unzip
+        xz-utils
+        fontconfig
+        fzf
+        starship
+        eza
+        zoxide
+        bat
+        fd-find
+        ripgrep
+        direnv
+        tree
+        jq
+        lsof
+        pigz
+    )
 
 {{- if or (eq .profile "server") (eq .profile "workstation") }}
-packages+=(
-    tmux
-    htop
-    rsync
-    ncdu
-)
+    packages+=(
+        tmux
+        htop
+        rsync
+        ncdu
+    )
 {{- end }}
 
-"${SUDO[@]}" apt-get update
-DEBIAN_FRONTEND=noninteractive \
-    "${SUDO[@]}" apt-get install -y "${packages[@]}"
+    printf 'Passwordless sudo available: installing packages with apt\n'
+    "${SUDO[@]}" apt-get update
+    DEBIAN_FRONTEND=noninteractive \
+        "${SUDO[@]}" apt-get install -y "${packages[@]}"
+fi
+{{- end }}
 
+require_host_tools
 link_debian_alternatives
-{{- end }}
