@@ -7,16 +7,8 @@ set -euo pipefail
 {{- $elevated = .elevated -}}
 {{- end }}
 
-can_elevate() {
-    if [[ "${EUID:-$(id -u)}" -eq 0 ]]; then
-        return 0
-    fi
-    command -v sudo >/dev/null 2>&1 || return 1
-    sudo -n true >/dev/null 2>&1
-}
-
 # Triggers (change these so chezmoi re-runs this script):
-# mise-run-installer-v1
+# mise-run-installer-v3
 # elevated={{ $elevated }} profile={{ .profile }}
 # {{ include "dot_config/mise/config.toml.tmpl" | sha256sum }}
 #
@@ -37,47 +29,64 @@ ensure_mise() {
     fi
 }
 
-userspace_cli_tools=(
-    eza@latest
-    starship@latest
-    zoxide@latest
-    bat@latest
-    fd@latest
-    ripgrep@latest
-    fzf@latest
-    jq@latest
-    direnv@latest
+has_cmd() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+# Required shell CLIs for this dotfiles stack.
+# Use the system binary when present; only install gaps with mise.
+# Non-required tools (tree, tmux, htop, …) are never auto-installed here.
+# Each entry is "path_cmd[:alt_cmd]|mise_spec"
+required_clis=(
+    'eza|eza@latest'
+    'starship|starship@latest'
+    'zoxide|zoxide@latest'
+    'bat:batcat|bat@latest'
+    'fd:fdfind|fd@latest'
+    'rg|ripgrep@latest'
+    'fzf|fzf@latest'
+    'jq|jq@latest'
+    'direnv|direnv@latest'
 )
 
-{{- /* Userspace needs mise for CLIs; workstation uses it for runtimes.
-     elevated=true normally skips mise (apt provides CLIs), but if sudo is
-     unavailable we still install mise + shell CLIs into the user prefix. */}}
-{{- if and $elevated (ne .profile "workstation") }}
+missing_required=()
+for entry in "${required_clis[@]}"; do
+    cmds="${entry%%|*}"
+    spec="${entry#*|}"
+    IFS=':' read -r -a cmd_aliases <<< "$cmds"
+    found=0
+    for cmd in "${cmd_aliases[@]}"; do
+        if has_cmd "$cmd"; then
+            found=1
+            break
+        fi
+    done
+    if [[ "$found" -eq 0 ]]; then
+        missing_required+=("$spec")
+    fi
+done
 
-if can_elevate; then
+need_mise=0
+{{- if eq .profile "workstation" }}
+need_mise=1
+{{- end }}
+if [[ ${#missing_required[@]} -gt 0 ]]; then
+    need_mise=1
+fi
+
+if [[ "$need_mise" -eq 0 ]]; then
+    printf 'Required shell CLIs already on PATH; skipping mise\n'
     exit 0
 fi
 
-printf 'elevated=true but no usable sudo; installing shell CLIs via mise\n'
-
 mise_bin="$(ensure_mise)"
 
-# config.toml has no userspace tools when elevated=true — install explicitly.
-"$mise_bin" install "${userspace_cli_tools[@]}"
-
-printf 'Shell CLIs installed via mise into your user prefix\n'
-printf 'Ensure ~/.local/bin is on PATH (dot_zshenv adds it).\n'
-
-{{- else }}
-
-mise_bin="$(ensure_mise)"
+if [[ ${#missing_required[@]} -gt 0 ]]; then
+    printf 'Installing missing required CLIs via mise: %s\n' "${missing_required[*]}"
+    "$mise_bin" install "${missing_required[@]}"
+    printf 'Ensure ~/.local/bin is on PATH (dot_zshenv adds it).\n'
+fi
 
 if [[ -f "$HOME/.config/mise/config.toml" ]]; then
     "$mise_bin" install
 fi
-
-{{- if not $elevated }}
-printf 'elevated=false: shell CLIs installed via mise into your user prefix\n'
-printf 'Ensure ~/.local/bin is on PATH (dot_zshenv adds it).\n'
-{{- end }}
-{{- end }}
