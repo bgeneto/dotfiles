@@ -8,7 +8,7 @@ set -euo pipefail
 {{- end }}
 
 # Triggers (change these so chezmoi re-runs this script):
-# mise-run-installer-v3
+# mise-run-installer-v4
 # elevated={{ $elevated }} profile={{ .profile }}
 # {{ include "dot_config/mise/config.toml.tmpl" | sha256sum }}
 #
@@ -33,6 +33,12 @@ has_cmd() {
     command -v "$1" >/dev/null 2>&1
 }
 
+# fzf is "present" only if it supports shell integration (fzf ≥ 0.48).
+fzf_is_usable() {
+    has_cmd fzf || return 1
+    fzf --help 2>&1 | grep -q -- '--zsh'
+}
+
 # Required shell CLIs for this dotfiles stack.
 # Use the system binary when present; only install gaps with mise.
 # Non-required tools (tree, tmux, htop, …) are never auto-installed here.
@@ -55,12 +61,18 @@ for entry in "${required_clis[@]}"; do
     spec="${entry#*|}"
     IFS=':' read -r -a cmd_aliases <<< "$cmds"
     found=0
-    for cmd in "${cmd_aliases[@]}"; do
-        if has_cmd "$cmd"; then
+    if [[ "$spec" == fzf@* ]]; then
+        if fzf_is_usable; then
             found=1
-            break
         fi
-    done
+    else
+        for cmd in "${cmd_aliases[@]}"; do
+            if has_cmd "$cmd"; then
+                found=1
+                break
+            fi
+        done
+    fi
     if [[ "$found" -eq 0 ]]; then
         missing_required+=("$spec")
     fi
