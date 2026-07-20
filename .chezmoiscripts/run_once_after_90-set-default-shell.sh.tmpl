@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+{{/* elevated from chezmoi data; default true for pre-migration configs */}}
 {{- $elevated := true -}}
 {{- if hasKey . "elevated" -}}
 {{- $elevated = .elevated -}}
-{{- end -}}
+{{- end }}
 
 {{- if not $elevated }}
 if command -v zsh >/dev/null 2>&1; then
@@ -35,5 +36,12 @@ fi
 
 echo
 echo "Changing the default shell to: $zsh_path"
-chsh -s "$zsh_path"
+if ! chsh -s "$zsh_path"; then
+    cat <<EOF
+Could not change the login shell (chsh failed).
+zsh is available at: $zsh_path
+Start it for this session with:  exec zsh
+Or ask your administrator to set your login shell.
+EOF
+fi
 {{- end }}
