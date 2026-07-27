@@ -21,8 +21,10 @@ curl -fsSL \
     https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraCode.tar.xz |
     tar -xJ -C "$font_dir"
 
+# Only refresh the user font cache. Unscoped `fc-cache -f` also tries to
+# rewrite system dirs (e.g. /usr/share/fonts/truetype) and fails without root.
 if command -v fc-cache >/dev/null 2>&1; then
-    fc-cache -f
+    fc-cache -f "$HOME/.local/share/fonts"
 fi
 
 printf 'Installed FiraCode Nerd Font under %s\n' "$font_dir"
