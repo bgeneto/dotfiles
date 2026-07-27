@@ -4,9 +4,11 @@ Debian-focused Zsh environment managed with [chezmoi](https://www.chezmoi.io/).
 
 Stack: **Zsh** · **Antidote** · **Starship** · **fzf** / **fzf-tab** · **forgit** · **eza** · **zoxide** · **bat** · **fd** · **ripgrep** · **direnv** · **mise**
 
+Personal fork — PRs not accepted.
+
 ## Quick start
 
-On a new Debian machine:
+On your Debian machine:
 
 ```bash
 sh -c "$(curl -fsLS https://get.chezmoi.io/lb)" -- init --apply bgeneto
