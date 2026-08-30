@@ -107,11 +107,15 @@ Fast non-interactive aliases:
 
 ### Docker
 
-OMZ Docker / Compose plugins add completions and helpers (e.g. `dps`-style aliases from the plugin). Also:
+Completions come from `docker completion zsh` when Docker is installed.
 
-```bash
-dsp    # docker system prune
-```
+| Alias | Action |
+|---|---|
+| `dps` / `dpsa` | `docker ps` / `docker ps -a` |
+| `dsp` | `docker system prune` |
+| `dcu` / `dcud` / `dcd` | `compose up` / `up -d` / `down` |
+| `dcps` | `docker compose ps` |
+| `dcl` / `dclf` | `compose logs` / `logs -f` |
 
 ### Privileges & services
 
@@ -125,7 +129,7 @@ dsp    # docker system prune
 ### Archives
 
 ```bash
-extract archive.tar.gz    # OMZ extract — auto-picks tar/unzip/etc.
+extract archive.tar.gz    # auto-picks tar/unzip/7z/etc.
 ```
 
 ### Project environments (direnv)

@@ -26,4 +26,13 @@ alias remove='sudo apt remove'
 alias search='apt search'
 
 alias listen='sudo lsof -i -P -n | grep LISTEN'
+
+alias dps='docker ps'
+alias dpsa='docker ps -a'
 alias dsp='docker system prune'
+alias dcu='docker compose up'
+alias dcud='docker compose up -d'
+alias dcd='docker compose down'
+alias dcps='docker compose ps'
+alias dcl='docker compose logs'
+alias dclf='docker compose logs -f'
