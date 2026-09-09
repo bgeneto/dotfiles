@@ -113,6 +113,7 @@ Completions come from `docker completion zsh` when Docker is installed.
 |---|---|
 | `dps` / `dpsa` | `docker ps` / `docker ps -a` |
 | `dsp` | `docker system prune` |
+| `dcb` | `compose build` (overrides iproute2 `dcb`) |
 | `dcu` / `dcud` / `dcd` | `compose up` / `up -d` / `down` |
 | `dcps` | `docker compose ps` |
 | `dcl` / `dclf` | `compose logs` / `logs -f` |
