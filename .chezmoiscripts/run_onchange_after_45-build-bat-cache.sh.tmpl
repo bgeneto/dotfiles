@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Theme file checksum trigger (bump when changing the vendored theme):
+# {{ include "dot_config/bat/themes/Catppuccin Mocha.tmTheme" | sha256sum }}
+# bat-cache-v1
+
+theme_dir="$HOME/.config/bat/themes"
+if [[ ! -d "$theme_dir" ]]; then
+    exit 0
+fi
+
+bat_bin=""
+if command -v bat >/dev/null 2>&1; then
+    bat_bin="$(command -v bat)"
+elif command -v batcat >/dev/null 2>&1; then
+    bat_bin="$(command -v batcat)"
+fi
+
+if [[ -z "$bat_bin" ]]; then
+    printf 'bat not found; skipping theme cache build\n'
+    exit 0
+fi
+
+printf 'Building bat theme cache from %s\n' "$theme_dir"
+"$bat_bin" cache --build
+printf 'bat theme cache rebuilt.\n'
