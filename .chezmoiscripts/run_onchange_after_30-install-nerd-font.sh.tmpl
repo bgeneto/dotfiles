@@ -6,6 +6,7 @@ if [[ "$(uname -s)" != "Linux" ]]; then
 fi
 
 font_dir="$HOME/.local/share/fonts/FiraCodeNerdFont"
+font_url="https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraCode.tar.xz"
 
 # Font archive URL checksum trigger (bump when changing font source):
 # firacode-nerd-font-latest
@@ -14,12 +15,20 @@ font_dir="$HOME/.local/share/fonts/FiraCodeNerdFont"
 # changes (including the trigger comment above). Do not add a local marker
 # file that skips work — that would block intentional re-downloads.
 
-rm -rf "$font_dir"
-mkdir -p "$font_dir"
+parent="$(dirname "$font_dir")"
+mkdir -p "$parent"
 
-curl -fsSL \
-    https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraCode.tar.xz |
-    tar -xJ -C "$font_dir"
+# Download and extract into a temporary directory first, then swap in only on
+# success. A failed download must never leave the machine without fonts.
+tmp="$(mktemp -d "$parent/.font-install.XXXXXX")"
+trap 'rm -rf "$tmp"' EXIT
+
+curl -fsSL "$font_url" -o "$tmp/FiraCode.tar.xz"
+mkdir "$tmp/extract"
+tar -xJf "$tmp/FiraCode.tar.xz" -C "$tmp/extract"
+
+rm -rf "$font_dir"
+mv "$tmp/extract" "$font_dir"
 
 # Only refresh the user font cache. Unscoped `fc-cache -f` also tries to
 # rewrite system dirs (e.g. /usr/share/fonts/truetype) and fails without root.
@@ -29,3 +38,4 @@ fi
 
 printf 'Installed FiraCode Nerd Font under %s\n' "$font_dir"
 printf 'Select "FiraCode Nerd Font Mono" in your terminal emulator.\n'
+printf 'WSL users: install the font on Windows too — see the README.\n'

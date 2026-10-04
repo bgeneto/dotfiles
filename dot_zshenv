@@ -4,4 +4,9 @@ export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 export XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 
 export ZDOTDIR="$XDG_CONFIG_HOME/zsh"
+
+# Keep PATH unique when this file is sourced repeatedly (nested shells,
+# subshells, non-interactive zsh). Without this, each source prepends
+# ~/.local/bin (and anything else) again.
+typeset -U path PATH
 export PATH="$HOME/.local/bin:$PATH"
