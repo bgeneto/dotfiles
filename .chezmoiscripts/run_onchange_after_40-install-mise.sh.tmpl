@@ -8,8 +8,8 @@ set -euo pipefail
 {{- end }}
 
 # Triggers (change these so chezmoi re-runs this script):
-# mise-run-installer-v6
-# elevated={{ $elevated }} profile={{ .profile }}
+# mise-run-installer-v7
+# elevated={{ $elevated }}
 # {{ include "dot_config/mise/config.toml.tmpl" | sha256sum }}
 #
 # Do not skip the installer just because mise is already on PATH — that would
@@ -174,7 +174,7 @@ required_clis=(
     'rg|ripgrep@latest'
     'fzf|fzf@latest'
     'jq|jq@latest'
-    'direnv|direnv@latest'
+    'delta|delta@latest'
 )
 
 missing_required=()
@@ -199,19 +199,6 @@ for entry in "${required_clis[@]}"; do
         missing_required+=("$spec")
     fi
 done
-
-need_mise=0
-{{- if eq .profile "workstation" }}
-need_mise=1
-{{- end }}
-if [[ ${#missing_required[@]} -gt 0 ]]; then
-    need_mise=1
-fi
-
-if [[ "$need_mise" -eq 0 ]]; then
-    printf 'Required shell CLIs already on PATH; skipping mise\n'
-    exit 0
-fi
 
 mise_bin="$(ensure_mise)"
 printf 'mise is activated by this repo in ~/.config/zsh/.zshrc (mise activate zsh).\n'

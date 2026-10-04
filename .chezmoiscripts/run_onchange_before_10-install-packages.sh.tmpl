@@ -97,21 +97,18 @@ if [[ "$(uname -s)" == "Linux" ]] && [[ -f /etc/debian_version ]] && can_elevate
         bat
         fd-find
         ripgrep
-        direnv
         tree
         jq
         lsof
         pigz
     )
 
-{{- if or (eq .profile "server") (eq .profile "workstation") }}
     packages+=(
         tmux
         htop
         rsync
         ncdu
     )
-{{- end }}
 
     printf 'Passwordless sudo available: installing packages with apt\n'
     "${SUDO[@]}" apt-get update

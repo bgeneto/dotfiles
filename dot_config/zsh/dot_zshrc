@@ -113,7 +113,7 @@ done
 # ---------------------------------------------------------------------------
 
 # Let Starship own the prompt. Without this, `source .venv/bin/activate`
-# (mise/direnv/uv) prepends "(venv_name)" before the directory.
+# (mise/uv) prepends "(venv_name)" before the directory.
 export VIRTUAL_ENV_DISABLE_PROMPT=1
 export CONDA_CHANGEPS1=no
 
@@ -129,7 +129,5 @@ else
   print -u2 "dotfiles: starship not on PATH; run chezmoi apply or check ~/.local/bin"
 fi
 
-# direnv last so project .envrc can override tools/PATH from above.
-if (( $+commands[direnv] )); then
-  eval "$(direnv hook zsh)"
-fi
+# Project environments come from mise (`[env]`, uv venv auto-activation);
+# see README ("Project environments (mise)").

@@ -1,27 +1,27 @@
-# mise tools — managed by chezmoi (templated from elevated/profile).
+# mise tools — managed by chezmoi. One unified profile for every machine:
+# language runtimes are always declared; `elevated` only controls optional apt.
 # After changing this file: chezmoi apply && mise install
 #
 # Shell CLIs (eza, starship, …) are NOT listed here on purpose.
 # Bootstrap prefers host binaries; gaps go into conf.d/shell-clis.toml via
 # `mise use --path` (chezmoi-safe) and are also symlinked into ~/.local/bin.
-
-{{- $elevated := true -}}
-{{- if hasKey . "elevated" -}}
-{{- $elevated = .elevated -}}
-{{- end }}
+#
+# Personal overrides: `mise use --path ~/.config/mise/conf.d/personal.toml …`
+# Never use `mise use --global`: it edits this chezmoi-managed file.
 
 [settings]
 experimental = false
+# Discover .nvmrc / .node-version (node) and .python-version (python).
+idiomatic_version_file_enable_tools = ["node", "python"]
+# Source an existing uv-managed venv when the project has a uv.lock.
+# Run `uv sync` once in the project first; mise only sources existing venvs.
+python.uv_venv_auto = "source"
 
 [tools]
-{{- if eq .profile "workstation" }}
-# Language runtimes / CLIs for workstation profiles.
-# Prefer `mise use` in a project (writes mise.toml) or uncomment globals here:
-#
-#   mise use node@24 python@3.13
-#   mise use --global go@1.24 rust@stable java@temurin-21
-#
-# node = "24"
-# python = "3.13"
+node = "24"
+python = "3.13"
+uv = "latest"
+# Add more globally if you want them everywhere, e.g.:
 # go = "1.24"
-{{- end }}
+# rust = "stable"
+# java = "temurin-21"

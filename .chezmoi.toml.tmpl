@@ -1,10 +1,3 @@
-{{- $profiles := list "minimal" "server" "workstation" -}}
-{{- $profile := promptStringOnce . "profile" "Machine profile (minimal / server / workstation)" "workstation" -}}
-{{- if not (has $profile $profiles) -}}
-{{-   writeToStdout (printf "Invalid profile %q; expected one of: minimal, server, workstation\n" $profile) -}}
-{{-   exit 1 -}}
-{{- end -}}
-
 {{- /* Userspace-first: default false. Opt into apt only when passwordless sudo works. */ -}}
 {{- $defaultElevated := "false" -}}
 {{- if eq (output "id" "-u" | trim) "0" -}}
@@ -24,7 +17,6 @@
 {{- $elevated := or (eq $elevatedRaw "true") (eq $elevatedRaw "yes") (eq $elevatedRaw "y") -}}
 
 [data]
-    profile = {{ $profile | quote }}
     elevated = {{ $elevated }}
 
 [diff]
