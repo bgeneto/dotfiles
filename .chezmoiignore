@@ -1,8 +1,10 @@
 README*
 LICENSE*
+AGENTS.md
 .editorconfig
 .gitignore
 docs/**
+scripts/**
 .git/**
 .local/**
 **/.DS_Store

@@ -145,32 +145,58 @@ extract_local_overrides() {
     [[ -f "$src" ]] || return 0
     [[ -f "$dest" ]] && return 0
 
-    if ! grep -qE 'oneapi|OpenBLAS|PYENV_ROOT|setvars\.sh' "$src" 2>/dev/null; then
+    if ! grep -qE 'oneapi|OpenBLAS|setvars\.sh' "$src" 2>/dev/null; then
         return 0
     fi
 
     cat >"$dest" <<'EOF'
 # Migrated from legacy ~/.zshrc (zsh4humans / gist). Review and edit freely.
 # This file is not managed by chezmoi.
-
+# Runtime initializers (pyenv/nvm/cargo/bun) are intentionally NOT migrated;
+# mise manages runtimes now. See the README migration notes.
+# API keys / tokens are redacted during extraction; never store them here.
 EOF
 
-    # Copy from the first matching section header through EOF-ish end of file
-    # for the common gist blocks (intel / openblas / pyenv).
+    # Copy only the known machine-specific sections (Intel oneAPI / OpenBLAS).
+    # Sections are anchored on their title lines (the legacy format is
+    # banner / title / banner / body) and stop at the next heading, so
+    # pyenv/nvm/cargo/bun blocks — which have no trailing banner — are never
+    # carried over. Secret-looking lines are dropped as a second line of
+    # defence. (A naive "copy to EOF" once captured unrelated settings and
+    # API keys appended after those blocks.)
     awk '
-        BEGIN { keep=0 }
-        /^# -+[[:space:]]*$/ { hdr=1; next }
-        hdr && /intel mkl|openblas|pyenv/ { keep=1; hdr=0 }
-        hdr { hdr=0 }
-        keep { print }
+        function heading(s) { return s ~ /^#[[:space:]]+[A-Za-z]/ }
+        function target(s)  { return tolower(s) ~ /intel mkl|openblas/ }
+        function secret(s) {
+            return tolower(s) ~ /(api[_-]?key|api[_-]?token|access[_-]?token|auth[_-]?token|secret|password|passwd|bearer)[[:space:]]*[=:]/
+        }
+
+        heading($0) {
+            if (target($0)) {
+                print "# -------------------------"
+                print $0
+                keep = 1
+                next
+            }
+            keep = 0
+            next
+        }
+        keep {
+            if ($0 ~ /^# -+[[:space:]]*$/) next
+            if (secret($0)) next
+            print
+        }
     ' "$src" >>"$dest"
 
-    if [[ ! -s "$dest" ]] || [[ "$(wc -l <"$dest")" -le 3 ]]; then
+    if ! grep -qE '^[^#[:space:]]' "$dest"; then
         rm -f "$dest"
         return 0
     fi
 
+    chmod 600 "$dest"
     printf 'Wrote local overrides: %s\n' "$dest"
+    printf 'pyenv/nvm/cargo initializers were skipped on purpose; mise manages runtimes.\n'
+    printf 'Secret-looking lines were redacted; keep keys in conf.d/99-secrets.zsh (mode 600).\n'
 }
 
 if [[ -f "$HOME/.zshrc" ]]; then

@@ -1,0 +1,64 @@
+rules:
+  # Focused secrets ruleset for this repo. Run manually or via scripts/check.sh:
+  #   semgrep scan --metrics=off --no-git-ignore --config scripts/semgrep-rules.yaml .
+  #
+  # For a full audit with registry packs:
+  #   semgrep scan --config p/secrets --config p/security-audit .
+  #
+  # PII checks (emails, CPF/CNPJ, phone) are intentionally not included here:
+  # e.g. `git@github.com` clone URLs are legitimate text. Scan for PII with a
+  # dedicated ruleset when needed.
+  - id: generic-api-key-assignment
+    languages: [generic]
+    message: Generic API key / secret / token assignment
+    severity: WARNING
+    patterns:
+      - pattern-regex: '(?i)(api[_-]?key|api[_-]?secret|access[_-]?token|auth[_-]?token|client[_-]?secret|secret[_-]?key|password|passwd)[[:space:]]*[=:][[:space:]]*"?[A-Za-z0-9_./+=-]{12,}'
+  - id: connection-string-with-password
+    languages: [generic]
+    message: Connection string containing a password
+    severity: WARNING
+    patterns:
+      - pattern-regex: '(postgres(ql)?|mysql|mongodb(\+srv)?|redis|amqp)://[^[:space:]"]+:[^[:space:]"]+@[^[:space:]"]+'
+  - id: private-key-block
+    languages: [generic]
+    message: Private key material
+    severity: ERROR
+    patterns:
+      - pattern-regex: '-----BEGIN [A-Z ]*PRIVATE KEY-----'
+  - id: aws-access-key-id
+    languages: [generic]
+    message: AWS access key ID
+    severity: ERROR
+    patterns:
+      - pattern-regex: 'AKIA[0-9A-Z]{16}'
+  - id: github-token
+    languages: [generic]
+    message: GitHub token
+    severity: ERROR
+    patterns:
+      - pattern-regex: 'gh[pousr]_[A-Za-z0-9]{30,}'
+  - id: jwt-token
+    languages: [generic]
+    message: JSON Web Token
+    severity: WARNING
+    patterns:
+      - pattern-regex: 'eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}'
+  - id: slack-token
+    languages: [generic]
+    message: Slack token
+    severity: ERROR
+    patterns:
+      - pattern-regex: 'xox[baprs]-[A-Za-z0-9-]{10,}'
+  - id: stripe-secret-key
+    languages: [generic]
+    message: Stripe secret key
+    severity: ERROR
+    patterns:
+      - pattern-regex: 'sk_(live|test)_[0-9a-zA-Z]{20,}'
+  - id: google-api-key
+    languages: [generic]
+    message: Google API key
+    severity: ERROR
+    patterns:
+      - pattern-regex: 'AIza[0-9A-Za-z_-]{35}'
