@@ -102,7 +102,7 @@ Fast non-interactive aliases:
 
 | Alias | Action |
 |---|---|
-| `gst` | `git status -sb` |
+| `gst` | `git status --short --branch` + clean/dirty summary |
 | `gsw` | `git switch` |
 | `gpr` | `git pull --rebase` |
 | `gp` | `git push` |
