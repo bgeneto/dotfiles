@@ -1,5 +1,16 @@
 # Helper functions
 
+# `history` lists the last 500 events. Zsh's `fc -l` default is only the last
+# 16. Arguments pass through unchanged (`history 1` lists everything,
+# `history -20` the last 20).
+history() {
+  if (( $# )); then
+    fc -l "$@"
+  else
+    fc -l -500
+  fi
+}
+
 mkdcd() {
   (( $# == 1 )) || {
     print -u2 'Usage: mkdcd DIRECTORY'

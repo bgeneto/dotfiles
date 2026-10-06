@@ -53,6 +53,8 @@ Works for commands, paths, git refs, Docker, etc.
 | `↑` / `↓` | History search matching what you already typed |
 | Grey ghost text | Autosuggestion from history — accept with `→` or `End` |
 | Leading space | Command is **not** saved to history (`HIST_IGNORE_SPACE`) |
+| `history` | Last 500 events (`history 1` lists everything, `history -N` the last N) |
+| `fullhistory` | Entire command history |
 
 Syntax highlighting colors valid/invalid commands as you type.
 

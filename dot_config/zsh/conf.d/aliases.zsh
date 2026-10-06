@@ -37,3 +37,6 @@ alias dcd='docker compose down'
 alias dcps='docker compose ps'
 alias dcl='docker compose logs'
 alias dclf='docker compose logs -f'
+
+# Entire command history (plain `history` shows only the last 500 events).
+alias fullhistory='fc -l 1'
