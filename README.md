@@ -136,7 +136,8 @@ Completions come from `docker completion zsh` when Docker is installed.
 ### Archives
 
 ```bash
-extract archive.tar.gz    # auto-picks tar/unzip/7z/etc.
+extract archive.tar.gz          # auto-picks tar/unzip/7z/etc.
+compress archive.tar.gz dir/    # tar + parallel pigz, level 5
 ```
 
 ### Project environments (mise)

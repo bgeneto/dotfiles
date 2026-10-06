@@ -38,5 +38,8 @@ alias dcps='docker compose ps'
 alias dcl='docker compose logs'
 alias dclf='docker compose logs -f'
 
+# Create a .tar.gz with parallel gzip (usage: compress archive.tar.gz path...).
+alias compress='tar --use-compress-program="pigz -k -5" -cf'
+
 # Entire command history (plain `history` shows only the last 500 events).
 alias fullhistory='fc -l 1'
