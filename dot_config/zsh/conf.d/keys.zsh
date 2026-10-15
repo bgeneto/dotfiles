@@ -34,3 +34,23 @@ bindkey '^[[A' history-substring-search-up
 bindkey '^[[B' history-substring-search-down
 bindkey '^[OA' history-substring-search-up
 bindkey '^[OB' history-substring-search-down
+
+# Ctrl+Backspace: delete the previous shell word, stopping at punctuation
+# (-, /, \, |, ., :, = …) as well as whitespace. Zsh's stock
+# backward-kill-word (Alt+Backspace) treats every character in $WORDCHARS as
+# part of the word, so "feature/foo-bar" is deleted in one gulp; emptying
+# $WORDCHARS locally makes each press kill one segment instead. Same idea as
+# z4h-backward-kill-word from zsh4humans.
+dotfiles-backward-kill-word() {
+  local WORDCHARS=''
+  zle .backward-kill-word
+}
+zle -N dotfiles-backward-kill-word
+
+# Ctrl+Backspace sends different bytes depending on the terminal:
+#   ^H            xterm, Windows Terminal, Alacritty, …
+#   ^[[27;5;127~  xterm with modifyOtherKeys
+#   ^[[127;5u     kitty keyboard protocol (kitty, foot, …)
+bindkey '^H'           dotfiles-backward-kill-word
+bindkey '^[[27;5;127~' dotfiles-backward-kill-word
+bindkey '^[[127;5u'    dotfiles-backward-kill-word

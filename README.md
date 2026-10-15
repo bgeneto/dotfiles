@@ -58,6 +58,18 @@ Works for commands, paths, git refs, Docker, etc.
 
 Syntax highlighting colors valid/invalid commands as you type.
 
+### Line editing
+
+| Shortcut | Action |
+|---|---|
+| `Ctrl+Backspace` | Delete the previous word, stopping at punctuation (`-`, `/`, `\`, `\|`, `.`, `:`, `=` …) as well as whitespace |
+| `Alt+Backspace` | Zsh default: delete the previous word (only whitespace / `WORDCHARS` stop it) |
+| `Home` / `End` | Beginning / end of line |
+| `Ctrl+←` / `Ctrl+→`, `Alt+←` / `Alt+→` | Move one word back / forward |
+| `Delete` | Delete the character under the cursor |
+
+`Ctrl+Backspace` kills one shell-shaped segment per press — `feature/foo-bar` → `feature/foo-` → `feature/` → empty — instead of deleting the whole `feature/foo-bar` token in one gulp. The common encodings are bound (`^H`, xterm `modifyOtherKeys`, kitty keyboard protocol); if a terminal maps plain `Backspace` to `^H`, both keys will behave the same.
+
 ### Jump directories (zoxide)
 
 Smarter `cd` that learns your habits:
