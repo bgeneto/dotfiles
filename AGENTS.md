@@ -60,6 +60,7 @@ dotfiles-doctor                   # diagnose PATH/runtime issues
 ├── .chezmoiexternal.toml         # Antidote external
 ├── .chezmoiscripts/              # idempotent bootstrap scripts
 ├── dot_zshenv                    # ~/.zshenv (ZDOTDIR, PATH dedup)
+├── dot_vim/plugin/               # ~/.vim/plugin (keep Vim on system Python)
 ├── dot_config/
 │   ├── zsh/                      # .zshrc, plugins.txt, conf.d/*
 │   ├── starship.toml             # Catppuccin Mocha prompt
@@ -80,6 +81,10 @@ dotfiles-doctor                   # diagnose PATH/runtime issues
   project has a `uv.lock`.
 - The legacy `90-migrated-local.zsh` file is not managed by chezmoi; it must
   not initialize pyenv/nvm (the migration script intentionally skips them).
+- Debian vim must keep `pythonthreehome=/usr` (`dot_vim/plugin/00-pythonhome.vim`).
+  mise's Python breaks Vim's embedded `_ctypes`. powerline comes from apt
+  `python3-powerline`, or from `/usr/bin/python3 -m pip install --user` when
+  that package is absent. Never install it with mise's `python3`.
 
 ## Before declaring success
 

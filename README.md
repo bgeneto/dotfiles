@@ -263,6 +263,12 @@ dotfiles-doctor
 
 Reports the active `ZDOTDIR`/`.zshrc`, resolved `node`/`npm`/`python`/`uv` paths, `mise current`, active `$VIRTUAL_ENV`, PATH duplicates, and warns when development commands resolve to `/mnt/c` or to leftover pyenv/nvm shims.
 
+### Vim and powerline
+
+Debian `vim` is linked against system `libpython`. After mise activation, that same `python3` is no longer the first one on `PATH`, and Vim's embedded interpreter follows PATH to mise's Python. mise compiles `_ctypes` into its binary, so Vim reports `No module named '_ctypes'` (often wrapped as `Unable to import powerline`) even after `pip install powerline-status`. Both Pythons are 3.13, so `--user` installs land in the same `~/.local/lib/python3.13/site-packages` and still run inside the wrong standard library.
+
+This is fixed in the repo, not in a personal `~/.vimrc`. On every machine, `chezmoi apply` deploys `~/.vim/plugin/00-pythonhome.vim`, which forces Vim's embedded interpreter back to `/usr` and clears a `g:powerline_loaded` workaround in vimrc. When `elevated=true`, the same apply installs the apt packages `vim-nox`, `powerline`, and `python3-powerline`. If that apt module is missing, the apply falls back to `/usr/bin/python3 -m pip install --user powerline-status` — never mise's `python3`.
+
 ## Theme (Catppuccin Mocha)
 
 Starship, fzf, bat, and delta all use the Catppuccin Mocha palette.
@@ -303,7 +309,7 @@ This is a **userspace** dotfiles bootstrap: **sudo is never required** and never
 | Required CLIs | Prefer system `eza`, `starship`, `fzf`, `delta`, …; gaps via `mise use --path` → `~/.config/mise/conf.d/shell-clis.toml` + symlinks in `~/.local/bin` |
 | Language runtimes | Always declared in mise config (`node@24`, `python@3.13`, `uv@latest`), installed on first apply |
 | Non-required | Missing `tree` / `tmux` / `htop` / etc. are ignored (no auto-install) |
-| `elevated=true` | Optional bonus: if passwordless sudo works, also `apt install` the package set (including `tmux`, `htop`, `rsync`, `ncdu`) + allow `chsh` |
+| `elevated=true` | Optional bonus: if passwordless sudo works, also `apt install` the package set (including `tmux`, `htop`, `rsync`, `ncdu`, `vim-nox`, `powerline`) + allow `chsh` |
 
 | `elevated` | Meaning |
 |---|---|
@@ -346,6 +352,7 @@ Then restart the terminal (or `exec zsh`).
 ├── .chezmoiexternal.toml           # Antidote external
 ├── .chezmoiscripts/                # idempotent bootstrap scripts
 ├── dot_zshenv                      → ~/.zshenv
+├── dot_vim/plugin/                 → ~/.vim/plugin/ (Vim python3 home)
 ├── dot_config/
 │   ├── zsh/                        → ~/.config/zsh/
 │   │   ├── dot_zshrc
