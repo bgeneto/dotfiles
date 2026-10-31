@@ -11,8 +11,9 @@
 
 [settings]
 experimental = false
-# Discover .nvmrc / .node-version (node) and .python-version (python).
-idiomatic_version_file_enable_tools = ["node", "python"]
+# Discover Node version files. Python version files can contain pyenv virtualenv
+# names, so use mise.toml for mise's Python version selection instead.
+idiomatic_version_file_enable_tools = ["node"]
 # Source an existing uv-managed venv when the project has a uv.lock.
 # Run `uv sync` once in the project first; mise only sources existing venvs.
 python.uv_venv_auto = "source"

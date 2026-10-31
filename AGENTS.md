@@ -12,8 +12,9 @@ Chezmoi source for a userspace-first Debian/WSL Zsh environment.
   optional apt/`chsh` steps (passwordless sudo required).
 - **Userspace-first.** Never make sudo mandatory. Optional apt steps run only
   when `elevated=true` and `sudo -n` already works.
-- **mise manages runtimes** (node 24, python 3.13, uv). direnv was removed;
-  project environments use mise `[env]` and `python.uv_venv_auto`.
+- **mise supplies default runtimes** (node 24, python 3.13, uv). direnv was
+  removed; project environments can use mise `[env]`, uv, or an explicitly
+  activated existing virtualenv.
 
 ## Never commit secrets
 
@@ -75,12 +76,15 @@ dotfiles-doctor                   # diagnose PATH/runtime issues
 ## Environment model
 
 - mise activates early in `dot_config/zsh/dot_zshrc`.
-- `.nvmrc` / `.node-version` / `.python-version` discovery is enabled via
-  `idiomatic_version_file_enable_tools`.
+- `.nvmrc` / `.node-version` discovery is enabled via
+  `idiomatic_version_file_enable_tools`. Python `.python-version` discovery
+  is disabled for both names and numeric pins; choose mise's project Python
+  in `mise.toml`. Other Python tools may still read `.python-version`.
 - `python.uv_venv_auto = "source"` activates an existing uv venv when a
   project has a `uv.lock`.
-- The legacy `90-migrated-local.zsh` file is not managed by chezmoi; it must
-  not initialize pyenv/nvm (the migration script intentionally skips them).
+- The legacy `90-migrated-local.zsh` file is not managed by chezmoi; the
+  migration script intentionally skips pyenv/nvm initialization. Deliberately
+  retained Python environments are valid; check for PATH or hook conflicts.
 - Debian vim must keep `pythonthreehome=/usr` (`dot_vim/plugin/00-pythonhome.vim`).
   mise's Python breaks Vim's embedded `_ctypes`. powerline comes from apt
   `python3-powerline`, or from `/usr/bin/python3 -m pip install --user` when

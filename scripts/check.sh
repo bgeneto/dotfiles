@@ -58,6 +58,13 @@ for f in dot_zshenv dot_config/zsh/dot_zshrc dot_config/zsh/conf.d/*.zsh; do
     fi
 done
 
+printf '\n== Python environment diagnostics\n'
+if bash scripts/test-doctor.sh; then
+    :
+else
+    report_fail "Python environment diagnostics"
+fi
+
 printf '\n== mise config template renders to valid TOML\n'
 if chezmoi_run execute-template <dot_config/mise/config.toml.tmpl |
     python3 -c 'import sys, tomllib; tomllib.loads(sys.stdin.read())'; then

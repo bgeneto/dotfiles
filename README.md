@@ -168,6 +168,8 @@ node = "24"
 
 For Python projects that use [uv](https://docs.astral.sh/uv/): run `uv sync` once to create `uv.lock` + `.venv`; mise then activates/deactivates the environment automatically as you enter and leave the directory (`python.uv_venv_auto = "source"`).
 
+Mise supplies the default Python interpreter; uv owns its project environment and dependencies. `uv run` uses the project environment, while `uv pip` can use an activated virtual environment. uv project commands normally use the project `.venv` even if another environment is active; `--active` opts into the active environment.
+
 For older Python projects without `uv.lock`, declare the venv explicitly:
 
 ```toml
@@ -177,6 +179,14 @@ python = "3.13"
 [env]
 _.python.venv = { path = ".venv", create = true }
 ```
+
+Existing virtual environments can also be activated by path, regardless of whether they were created with `venv`, uv, or pyenv. For example, activate an existing named environment manually:
+
+```bash
+source "$HOME/.pyenv/versions/neuryx/bin/activate"
+```
+
+Alternatively, use `[env]` and `_.python.venv = "/absolute/path/to/environment"` in a trusted project `mise.toml` to activate an existing environment on directory entry. Choose one activation mechanism per project and verify `VIRTUAL_ENV` and `python` with `dotfiles-doctor`.
 
 Migrating an existing `.envrc`: translate `export FOO=bar` to `[env]` entries, `source_up`/`layout` calls to `_.source`/`_.path`/`_.python.venv`, then delete the `.envrc`.
 
@@ -190,8 +200,10 @@ Two-line Catppuccin Mocha prompt: directory, git branch/status, Node and Python 
 
 Global defaults come from this repo (`~/.config/mise/config.toml`): `node@24`, `python@3.13`, `uv@latest`, plus:
 
-- discovery of `.nvmrc` / `.node-version` / `.python-version`
+- discovery of `.nvmrc` / `.node-version` for Node
 - automatic uv venv activation
+
+Mise does **not** read `.python-version` files in the default configuration, even when they contain a numeric version. They may contain pyenv virtualenv names, which mise would otherwise mistake for Python versions. Select a project-specific mise Python in `mise.toml`, as below; pyenv and uv may independently read their own version files. Re-enabling Python version-file discovery in another mise config or environment override can bring the warning back.
 
 **Pin tools for the current directory** (writes `mise.toml` in the project):
 
@@ -261,7 +273,7 @@ If a key was ever stored in a world-readable file, shell history, a backup, or a
 dotfiles-doctor
 ```
 
-Reports the active `ZDOTDIR`/`.zshrc`, resolved `node`/`npm`/`python`/`uv` paths, `mise current`, active `$VIRTUAL_ENV`, PATH duplicates, and warns when development commands resolve to `/mnt/c` or to leftover pyenv/nvm shims.
+Reports the active `ZDOTDIR`/`.zshrc`, resolved `node`/`npm`/`python`/`uv` paths, `mise current`, active `$VIRTUAL_ENV`, and PATH duplicates. It identifies the nearest non-numeric `.python-version` pin and warns if mise's Python version-file discovery is enabled. It also flags a Python executable that does not match the active environment, and notes pyenv paths for review without treating an intentionally activated pyenv environment as an error.
 
 ### Vim and powerline
 
@@ -330,7 +342,8 @@ Then run `chezmoi apply`.
 - **Profiles are gone.** `minimal` / `server` / `workstation` were unified into one default profile. A leftover `profile = "…"` in `~/.config/chezmoi/chezmoi.toml` is ignored and can be deleted.
 - **direnv was removed.** Remove `.envrc` files and move their contents into `mise.toml` (see [Project environments (mise)](#project-environments-mise)).
 - **Secrets are never migrated.** The migration script redacts API keys/tokens and skips pyenv/nvm/cargo/bun blocks. Move any key found in `90-migrated-local.zsh`, a backup, or shell history into `~/.config/zsh/conf.d/99-secrets.zsh` (mode 600) and **rotate it** — exposure means it must be considered compromised.
-- **Legacy runtime init:** if `~/.config/zsh/conf.d/90-migrated-local.zsh` still initializes pyenv, nvm, cargo, or bun, delete those blocks — mise now provides `node`, `python`, and `uv`. Keep only the Intel oneAPI / OpenBLAS blocks. Run `dotfiles-doctor` to confirm nothing resolves to `~/.pyenv` or `~/.nvm`.
+- **Python version files:** mise no longer reads `.python-version`, including numeric pins. Move any Python version that mise should select into the project's `mise.toml`; keep named pins if another tool uses them. Existing pyenv environments remain available but are not automatically activated by this change.
+- **Legacy runtime init:** the migration script intentionally skips pyenv, nvm, cargo, and bun initialization. If an older `90-migrated-local.zsh` still initializes a manager, review its PATH and hook ordering for conflicts with mise. A deliberately activated pyenv virtualenv is supported; it need not be removed. Use `dotfiles-doctor` to check the selected interpreter.
 
 ## Migrating from zsh4humans
 
