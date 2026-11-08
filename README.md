@@ -126,15 +126,58 @@ When [delta](https://dandavison.github.io/delta/) is installed (the bootstrap en
 ### Docker
 
 Completions come from `docker completion zsh` when Docker is installed.
+Shortcut names follow the Oh My Zsh
+[docker-compose](https://github.com/ohmyzsh/ohmyzsh/blob/master/plugins/docker-compose/docker-compose.plugin.zsh)
+and [docker](https://github.com/ohmyzsh/ohmyzsh/blob/master/plugins/docker/docker.plugin.zsh)
+plugins so upstream docs and pasted commands work unchanged.
+`dcu`/`dcud`/`dcd` are local short forms kept alongside
+`dcup`/`dcupd`/`dcdn`.
+
+Compose (`dco` = `docker compose`):
+
+| Alias | Action |
+|---|---|
+| `dco` | `docker compose` |
+| `dcb` | `build` (shadows iproute2 `/usr/sbin/dcb`) |
+| `dcc` / `dce` | `config` / `exec` |
+| `dcps` / `dci` | `ps` / `images` |
+| `dcup` / `dcu` | `up` |
+| `dcupb` | `up --build` |
+| `dcupd` / `dcud` | `up -d` |
+| `dcupdb` | `up -d --build` |
+| `dcupw` / `dcupwb` | `up --watch` / `--watch --build` |
+| `dcdn` / `dcd` | `down` |
+| `dcstart` / `dcstop` / `dcrestart` / `dck` | start / stop / restart / kill |
+| `dcrm` / `dcr` | `rm` / `run` |
+| `dcl` / `dclf` / `dclF` | `logs` / `logs -f` / `logs -f --tail 0` |
+| `dcpull` | `pull` |
+| `dcv` / `dcsts` | `version` / `stats` |
+
+Standalone Docker:
 
 | Alias | Action |
 |---|---|
 | `dps` / `dpsa` | `docker ps` / `docker ps -a` |
-| `dsp` | `docker system prune` |
-| `dcb` | `compose build` (overrides iproute2 `dcb`) |
-| `dcu` / `dcud` / `dcd` | `compose up` / `up -d` / `down` |
-| `dcps` | `docker compose ps` |
-| `dcl` / `dclf` | `compose logs` / `logs -f` |
+| `dsp` / `dsprune` | `docker system prune` |
+| `dbl` | `docker build` |
+| `dpu` | `docker pull` |
+| `dils` / `dii` / `dirm` / `dit` | image ls / inspect / rm / tag |
+| `dib` / `dipu` / `dipru` | image build / push / prune -a |
+| `dr` / `drit` | container run / run -it |
+| `dxc` / `dxcit` | container exec / exec -it |
+| `drm` | container rm |
+| `dst` / `dstp` / `drs` | container start / stop / restart |
+| `dcls` / `dclsa` / `dcprune` | container ls / ls -a / prune |
+| `dcin` / `dlo` / `dpo` / `dtop` | container inspect / logs / port / `docker top` |
+| `dsts` | `docker stats` |
+| `dnc` / `dncn` / `dndcn` | network create / connect / disconnect |
+| `dni` / `dnls` / `dnrm` / `dnprune` | network inspect / ls / rm / prune |
+| `dvi` / `dvls` / `dvprune` | volume inspect / ls / prune |
+
+Notes: `--watch` needs Docker Compose ≥ 2.22. `dcv` and `dvi` would shadow the
+NICE DCV client and TeX DVI tooling if those are installed. OMZ's `dsta`
+(stops every running container) and `drm!` (force remove) are deliberately not
+defined.
 
 ### Privileges & services
 
